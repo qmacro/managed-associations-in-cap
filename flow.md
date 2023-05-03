@@ -657,7 +657,7 @@ SQL: No change.
 
 SERVER: When the empty file `srv/extend.cds` is first created, the server restarts, and this new file is included when loading the model:
 
-```text
+```log
 [cds] - loaded model from 3 file(s):
 
   db/schema.cds
@@ -689,7 +689,7 @@ extend bookshop.Authors with {
 
 EDMX: There are warnings when generating the EDMX, as follows:
 
-```text
+```log
 [WARNING] srv/extend.cds:8:3: An association can't have cardinality "to many" without an ON-condition (in entity:“bookshop.Authors”/element:“books”)
 [WARNING] srv/main.cds:5:10: An association can't have cardinality "to many" without an ON-condition (in entity:“Z.Authors”/element:“books”)
 ```
@@ -751,7 +751,7 @@ Second, there is also an additional `Property` for the `books_ID` element that w
 
 SQL: The same warnings appear as did for the EDMX (and for the same reason, of course):
 
-```text
+```log
 [WARNING] srv/extend.cds:8:3: An association can't have cardinality "to many" without an ON-condition (in entity:“bookshop.Authors”/element:“books”)
 [WARNING] srv/main.cds:5:10: An association can't have cardinality "to many" without an ON-condition (in entity:“Z.Authors”/element:“books”)
 ```
@@ -1187,7 +1187,7 @@ This modification causes quite a bit of a change, including warnings!
 
 EDMX: A warning is emitted thus:
 
-```text
+```log
 [WARNING] srv/main.cds:4:10: No OData navigation property generated, target “Books_Authors” is outside of service “Z” (in entity:“Z.Books”/element:“authors”)
 [WARNING] srv/main.cds:5:10: No OData navigation property generated, target “Books_Authors” is outside of service “Z” (in entity:“Z.Authors”/element:“books”)
 ```
@@ -1265,4 +1265,59 @@ FROM bookshop_Authors AS Authors_0;
 
 The only place where we see any sort of "generated" `_ID` fields (as a result of managed associations) is in the DDL definition for the link entity table `Books_Authors`. But that right now is pretty much an island doing nothing and connected to nothing.
 
+SERVER: We see an error emitted:
 
+```log
+[cds] - connect to db > sqlite { database: ':memory:' }
+ > init from db/data/bookshop-Authors.csv
+ > init from db/data/bookshop-Books.csv
+[ERROR] SQLITE_ERROR: table bookshop_Books has no column named author_ID in: 
+INSERT INTO bookshop_Books ( ID, title, author_ID ) VALUES ( ?, ?, ? )
+```
+
+This makes sense, as there is no longer any `author_ID`. So let's get rid of that from the CSV file `db/data/bookshop-Books.csv`. And that's not wasted effort that we'll have to shortly undo, because when we do want to rebuild that relationship (between books and authors), we won't be doing it in the `db/data/bookshop-Books.csv` file, we'll be doing it in the CSV file that corresponds to the link entity.
+
+Use the utility `csvdelfield` in the `utils/` directory to do this. First, try it out, specifying the name of the CSV file, like this:
+
+```shell
+csvdelfield db/data/bookshop-Books.csv
+```
+It should show you a list of current fields, like this:
+
+```log
+ID,title,author_ID
+```
+
+Now re-run it, this time specifying the `author_ID` field that you want to delete (warning: this will actually modify the CSV file contents directly, as well as displaying the new content to you:
+
+```shell
+csvdelfield db/data/bookshop-Books.csv author_ID
+ID,title
+201,Wuthering Heights
+207,Jane Eyre
+251,The Raven
+252,Eleonora
+271,Catweazle
+```
+
+Because of this change to the CSV file, the CAP server will restart (as we're still running `cds watch`) and reload the CSV files, and this time there is no error:
+
+```log
+[cds] - connect to db > sqlite { database: ':memory:' }
+ > init from db/data/bookshop-Authors.csv
+ > init from db/data/bookshop-Books.csv
+/> successfully deployed to sqlite in-memory db
+```
+
+## Add data to the link entity to relate books and authors
+
+The `Books_Authors` link entity is represented at the persistence layer with a simple table which we know is defined like this:
+
+```sql
+CREATE TABLE Books_Authors (
+  book_ID INTEGER,
+  author_ID INTEGER
+);
+```
+
+So we can now relate books and authors by defining pairs of IDs in a new file ...
