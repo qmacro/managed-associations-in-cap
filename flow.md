@@ -174,7 +174,7 @@ Move the entity specification in `srv/main.cds` to within the `service` statemen
 using bookshop from '../db/schema';
 
 service Z {
-   entity Books as projection on bookshop.Books;
+  entity Books as projection on bookshop.Books;
 }
 ```
 
@@ -269,8 +269,8 @@ Add another entity specification within the service, for Authors:
 using bookshop from '../db/schema';
 
 service Z {
-   entity Books as projection on bookshop.Books;
-   entity Authors as projection on bookshop.Authors;
+  entity Books as projection on bookshop.Books;
+  entity Authors as projection on bookshop.Authors;
 }
 ```
 
@@ -492,6 +492,105 @@ This suggests we need to add a new field to the `db/data/bookshop-Books.csv` fil
 
 ## Add author_ID field to the Books CSV data
 
-...
+In the `utils/` dir, use `addpath` to add the dir to the PATH environment variable. Then go back to the project root and use `csvgetdata` to retrieve the Books CSV like this:
+
+```shell
+csvgetdata Books ID,title,author_ID
+```
+
+This should produce something like this:
+
+```csv
+ID,title,author_ID
+201,Wuthering Heights,101
+207,Jane Eyre,107
+251,The Raven,150
+252,Eleonora,150
+271,Catweazle,170
+```
+
+Add it to the `db/data/bookshop-Books.csv` file:
+
+```shell
+csvgetdata Books ID,title,author_ID > db/data/bookshop-Books.csv
+```
+
+Now we have the values for `author_ID` in the Books data.
+
+### Notes
+
+EDMX: No change.
+
+SQL: No change.
+
+SERVER: Restarts, and now the `Books` entityset's records have values in the `author_ID` field:
+
+```json
+{
+  "@odata.context": "$metadata#Books",
+  "value": [
+    {
+      "ID": 201,
+      "title": "Wuthering Heights",
+      "author_ID": 101
+    },
+    {
+      "ID": 207,
+      "title": "Jane Eyre",
+      "author_ID": 107
+    },
+    {
+      "ID": 251,
+      "title": "The Raven",
+      "author_ID": 150
+    },
+    {
+      "ID": 252,
+      "title": "Eleonora",
+      "author_ID": 150
+    },
+    {
+      "ID": 271,
+      "title": "Catweazle",
+      "author_ID": 170
+    }
+  ]
+}
+```
+
+This means we can use the `$expand` system query option from Books to follow the `author` navigation property, e.g. <http://localhost:4004/z/Books?$expand=author>.
+
+There is no change to the Authors entityset, and we cannot go the other way, i.e. we can not go from author to book. For a start, there is no navigation property available for that.
+
+## Move the current one-to-one association from the persistence layer to the service layer.
+
+Rather than continue to work at the `db/schema.cds` level, let's move our relationship enhancements up a layer, to the service layer, and store them in an "extension" file. First, create a new, empty file `srv/extend.cds`. 
+
+Next, remove the `author` element from the `Books` entity in `db/schema.cds` and add it as part of the following in the new `srv/extend.cds` (noting that the association target must now be specified as `bookshop.Authors` and not just `Authors`). Save the changes to both files at the same time.
+
+
+```cds
+using bookshop from '../db/schema';
+
+extend bookshop.Books with {
+  author: Association to bookshop.Authors;
+}
+```
+
+### Notes
+
+EDMX: No change.
+
+SQL: No change.
+
+SERVER: When the empty file `srv/extend.cds` is first created, the server restarts, and this new file is included when loading the model:
+
+```text
+[cds] - loaded model from 3 file(s):
+
+  db/schema.cds
+  srv/extend.cds
+  srv/main.cds
+```
 
 
