@@ -1,11 +1,11 @@
 using bookshop from '../db/schema';
 
 extend bookshop.Books with {
-  author: Association to bookshop.Authors;
+  authors: Association to many Books_Authors on authors.book = $self;
 }
 
 extend bookshop.Authors with {
-  books: Association to many bookshop.Books on books.author = $self;
+  books: Association to many Books_Authors on books.author = $self;
 }
 
 entity Books_Authors {
