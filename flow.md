@@ -1320,4 +1320,248 @@ CREATE TABLE Books_Authors (
 );
 ```
 
-So we can now relate books and authors by defining pairs of IDs in a new file ...
+So we can now relate books and authors by defining pairs of IDs in a new file `db/data/Books_Authors.csv`. The name follows the usual convention, even though it looks a little different to the names of the other CSV files here; it is the namespace and entity name, but as there's no namespace that contextualises the entity here, there's no `<namespace>-` prefix part in the filename. 
+
+Let's start by restoring the relationships we had before, where Charlotte Brontë wrote Wuthering Heights, Emily Brontë wrote Jane Eyre, Richard Carpenter wrote Catweazle, and Edgar Allen Poe, wrote Eleonora and also The Raven (a poem, as it happens).
+
+In `db/data/Books_Authors.csv`, add the following:
+
+```csv
+book_ID,author_ID
+201,101
+207,107
+251,150
+252,150
+271,170
+```
+
+### Notes
+
+EDMX: No change.
+
+SQL: No change.
+
+SERVER: The server restarts, and shows that data is now also being loaded from this new CSV file:
+
+```log
+[cds] - connect to db > sqlite { database: ':memory:' }
+ > init from db/data/Books_Authors.csv
+ > init from db/data/bookshop-Authors.csv
+ > init from db/data/bookshop-Books.csv
+/> successfully deployed to sqlite in-memory db
+```
+
+We can now traverse one level of relationships, to find the books that authors wrote, such as with [http://localhost:4004/z/Authors?$expand=books](http://localhost:4004/z/Authors?$expand=books), which produces this:
+
+```json
+{
+  "@odata.context": "$metadata#Authors(books())",
+  "value": [
+    {
+      "ID": 101,
+      "name": "Emily Brontë",
+      "books": [
+        {
+          "book_ID": 201,
+          "author_ID": 101
+        }
+      ]
+    },
+    {
+      "ID": 107,
+      "name": "Charlotte Brontë",
+      "books": [
+        {
+          "book_ID": 207,
+          "author_ID": 107
+        }
+      ]
+    },
+    {
+      "ID": 150,
+      "name": "Edgar Allen Poe",
+      "books": [
+        {
+          "book_ID": 251,
+          "author_ID": 150
+        },
+        {
+          "book_ID": 252,
+          "author_ID": 150
+        }
+      ]
+    },
+    {
+      "ID": 170,
+      "name": "Richard Carpenter",
+      "books": [
+        {
+          "book_ID": 271,
+          "author_ID": 170
+        }
+      ]
+    }
+  ]
+}
+```
+
+Note that there is no author name information shown, we just get author ID information. That's because the author name is one step further on. Right now, you can see this query and result as jumping half way across a stream to a stone in the middle, which represents the link entity. To get to the other side, you need to take a second jump.
+
+You can use the power of OData V4 to make the second jump so that you effectively cover both steps in one go, from `Books` to `Books_Authors` to `Authors`, like this: [http://localhost:4004/z/Authors?$expand=books($expand=book)](http://localhost:4004/z/Books?$expand=authors($expand=author)), which will emit:
+
+```json
+{
+  "@odata.context": "$metadata#Books(authors(author()))",
+  "value": [
+    {
+      "ID": 201,
+      "title": "Wuthering Heights",
+      "authors": [
+        {
+          "book_ID": 201,
+          "author_ID": 101,
+          "author": {
+            "ID": 101,
+            "name": "Emily Brontë"
+          }
+        }
+      ]
+    },
+    {
+      "ID": 207,
+      "title": "Jane Eyre",
+      "authors": [
+        {
+          "book_ID": 207,
+          "author_ID": 107,
+          "author": {
+            "ID": 107,
+            "name": "Charlotte Brontë"
+          }
+        }
+      ]
+    },
+    {
+      "ID": 251,
+      "title": "The Raven",
+      "authors": [
+        {
+          "book_ID": 251,
+          "author_ID": 150,
+          "author": {
+            "ID": 150,
+            "name": "Edgar Allen Poe"
+          }
+        }
+      ]
+    },
+    {
+      "ID": 252,
+      "title": "Eleonora",
+      "authors": [
+        {
+          "book_ID": 252,
+          "author_ID": 150,
+          "author": {
+            "ID": 150,
+            "name": "Edgar Allen Poe"
+          }
+        }
+      ]
+    },
+    {
+      "ID": 271,
+      "title": "Catweazle",
+      "authors": [
+        {
+          "book_ID": 271,
+          "author_ID": 170,
+          "author": {
+            "ID": 170,
+            "name": "Richard Carpenter"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Add a further author and book relationship to define co-authorship
+
+As a final test, let's create a fictional collaboration between Ellis Bell and Emily Brontë. Ellis Bell was the pseudonym under which Emily Brontë wrote Wuthering Heights, so it sort of makes sense. Or maybe it doesn't. Anyway. 
+
+Add a new record to the end of `db/data/bookshop-Authors.csv` to represent Ellis Bell, so it looks like this:
+
+```csv
+ID,name
+101,Emily Brontë
+107,Charlotte Brontë
+150,Edgar Allen Poe
+170,Richard Carpenter
+102,Ellis Bell
+```
+
+Also add a new record to the end of `db/data/Books_Authors.csv` to link book Wuthering Heights (ID 201) with author Ellis Bell (102), so it looks like this:
+
+```csv
+book_ID,author_ID
+201,101
+207,107
+251,150
+252,150
+271,170
+201,102
+```
+
+Now check that both Emily Brontë and Ellis Bell appear as authors, with [http://localhost:4004/z/Authors?$search=Ellis OR Emily](http://localhost:4004/z/Authors?$search=Ellis%20OR%20Emily) for example:
+
+```json
+{
+  "@odata.context": "$metadata#Authors",
+  "value": [
+    {
+      "ID": 101,
+      "name": "Emily Brontë"
+    },
+    {
+      "ID": 102,
+      "name": "Ellis Bell"
+    }
+  ]
+}
+```
+
+And now check that Wuthering Heights is now recorded as being co-written by both authors, with [http://localhost:4004/z/Books?$filter=title%20eq%20%27Wuthering%20Heights%27&$expand=authors($expand=author)](http://localhost:4004/z/Books?$filter=title%20eq%20%27Wuthering%20Heights%27&$expand=authors($expand=author)):
+
+```json
+{
+  "@odata.context": "$metadata#Books(authors(author()))",
+  "value": [
+    {
+      "ID": 201,
+      "title": "Wuthering Heights",
+      "authors": [
+        {
+          "book_ID": 201,
+          "author_ID": 101,
+          "author": {
+            "ID": 101,
+            "name": "Emily Brontë"
+          }
+        },
+        {
+          "book_ID": 201,
+          "author_ID": 102,
+          "author": {
+            "ID": 102,
+            "name": "Ellis Bell"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+Excellent!
