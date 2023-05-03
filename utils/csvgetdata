@@ -2,7 +2,8 @@
 
 # Simple CSV data retriever
 # Usage:
-# ./getcsvdata Books "ID,title" > targetfile.csv
+# ./getcsvdata Books > targetfile.csv             # all fields
+# ./getcsvdata Books ID,title > targetfile.csv    # just ID and title
 
 set -eo pipefail
 
@@ -13,14 +14,23 @@ declare sourcens="sap.capire.bookshop"
 main() {
 
   local entity="${1:?Specify entity e.g. \"Books\"}"
-  local fields="${2:?Specify fields e.g. \"ID,title\"}"
+  local fields="$2"
+  local cmd
 
+  # If no fields specified, then output all of them, otherwise specify them
+  if [[ -z $fields ]]; then
+    cmd="cat"
+  else
+    cmd="cut -f $fields"
+  fi
+
+  # shellcheck disable=SC2086
   curl \
     --location \
     --silent \
     --fail \
     --url "$baseurl/$sourcens-$entity.csv" \
-    | mlr --csv cut -f "$fields"
+    | mlr --csv $cmd
 
 }
 

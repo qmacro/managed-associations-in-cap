@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# Simple script to delete a field (column) from a CSV file.
+# Note: This will REPLACE the original CSV file!
+#
+# If no field is specified, a list is presented.
+
+set -eo pipefail
+
+main() {
+
+  local file="${1:?Specify CSV file}"
+  local field=$2
+  local tempfile
+
+  if [[ -z $field ]]; then
+    mlr --csv cat "$file" | head -1
+  else
+    tempfile="$(mktemp)"
+    mlr --csv cut -x -f "$field" "$file" \
+      | tee "$tempfile" \
+      && mv "$tempfile" "$file"
+  fi
+
+}
+
+main "$@"
