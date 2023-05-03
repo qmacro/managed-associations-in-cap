@@ -1118,8 +1118,8 @@ extend bookshop.Authors with {
 }
 
 entity Books_Authors {
-    book: Association to bookshop.Books;
-    author: Association to bookshop.Authors;
+  book: Association to bookshop.Books;
+  author: Association to bookshop.Authors;
 }
 ```
 
@@ -1140,26 +1140,129 @@ SERVER: No change.
 
 ## Relate each of the Books and Authors entities to the new link entity
 
-Think of the link entity as a central "plumbing" facility, that just has a list of (in this case) pairs of numeric author and book IDs, linking authors and books. Then, from either side, we need to add links, one from the Books entity, and one from the Authors entity, to that central plumbing facility, i.e. the link entity.
+Think of the link entity as a central "plumbing" facility, that just has a list of (in this case) pairs of numeric author and book IDs, linking authors and books. Then, from either side, we need to links the Books entity and Authors entity to that central plumbing facility, i.e. the link entity.
 
-Right now, the relationships defined in `srv/extend.cds`, going from `bookshop.Books` and going from `bookshop.Authors`, go to the opposite entity, i.e. these are the two managed association definitions (see just earlier for the entire contents):
+Right now, the relationships defined in `srv/extend.cds`, going from `bookshop.Books` and going from `bookshop.Authors`, go to each other, i.e. these are the two managed association definitions (see just earlier for the entire contents):
 
-```cds
-extend bookshop.Books with {
-  author: Association to bookshop.Authors;
-}
+* The current (one-) to-one managed association:
+  ```cds
+  extend bookshop.Books with {
+    author: Association to bookshop.Authors;
+  }
+  ```
 
-extend bookshop.Authors with {
-  books: Association to many bookshop.Books on books.author = $self;
-}
-```
+* And the current (one-) to-many managed association:
+  ```cds
+  extend bookshop.Authors with {
+    books: Association to many bookshop.Books on books.author = $self;
+  }
+  ```
 
 Now we need to change those to point to the corresponding elements in the new link entity `Books_Authors`. 
 
-Modify the `srv/extend.cds` so the contents look like this:
+Modify the `srv/extend.cds` so the entire contents look like this (note that each of the element names are plural now):
 
 ```cds
-...
+using bookshop from '../db/schema';
+
+extend bookshop.Books with {
+  authors: Association to many Books_Authors on authors.book = $self;
+}
+
+extend bookshop.Authors with {
+  books: Association to many Books_Authors on books.author = $self;
+}
+
+entity Books_Authors {
+  book: Association to bookshop.Books;
+  author: Association to bookshop.Authors;
+}
 ```
+
+> It's at this point worth mentioning the way I remember how the `on` conditions are specified, as the examples here are clean and clear to use in an explanation. In the first example here (`authors: Association to many Books_Authors on authors.book = $self`) the left hand side of the condition, `authors.book` is constructed from the name of the element we're defining (`authors`), and the name of the element in the target entity (i.e. `book`), that is `authors.book`. Similarly for `books.author` in the second example.
+
+This modification causes quite a bit of a change, including warnings!
+
+### Notes
+
+EDMX: A warning is emitted thus:
+
+```text
+[WARNING] srv/main.cds:4:10: No OData navigation property generated, target “Books_Authors” is outside of service “Z” (in entity:“Z.Books”/element:“authors”)
+[WARNING] srv/main.cds:5:10: No OData navigation property generated, target “Books_Authors” is outside of service “Z” (in entity:“Z.Authors”/element:“books”)
+```
+
+The message is clear, although it's best to read this one from back to front. In other words, because `Books_Authors` is not included in the `Z` service definition, which is true (we haven't added anything inside the `service Z { ... }` to include it yet) ... a navigation property binding at the OData level cannot be generated (because there isn't anywhere for it to point - there is no target entity type for this link entity, and consequently no entityset either as a target for the navigation).
+
+As a result of this omission, all relationships (in the form of navigation properties) have disappeared, and we're back to almost where we started (with just simple properties for the book IDs and titles, and the author IDs and names):
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Core.V1.xml">
+    <edmx:Include Alias="Core" Namespace="Org.OData.Core.V1"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema Namespace="Z" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityContainer Name="EntityContainer">
+        <EntitySet Name="Books" EntityType="Z.Books"/>
+        <EntitySet Name="Authors" EntityType="Z.Authors"/>
+      </EntityContainer>
+      <EntityType Name="Books">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+        <Property Name="title" Type="Edm.String"/>
+      </EntityType>
+      <EntityType Name="Authors">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+        <Property Name="name" Type="Edm.String"/>
+      </EntityType>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
+```
+
+This is of course just a temporary state, we're not done yet.
+
+SQL: There have been corresponding changes at the SQL level too, albeit a little less extreme but with just as much impact. The `author_ID` field has been removed. This makes sense, as it was only introduced because of the (one-) to-one managed association from `Books` to `Authors`, and this has now been replaced. This is what the SQL looks like at this point:
+
+```sql
+CREATE TABLE Books_Authors (
+  book_ID INTEGER,
+  author_ID INTEGER
+);
+
+CREATE TABLE bookshop_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(5000),
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE bookshop_Authors (
+  ID INTEGER NOT NULL,
+  name NVARCHAR(5000),
+  PRIMARY KEY(ID)
+);
+
+CREATE VIEW Z_Books AS SELECT
+  Books_0.ID,
+  Books_0.title
+FROM bookshop_Books AS Books_0;
+
+CREATE VIEW Z_Authors AS SELECT
+  Authors_0.ID,
+  Authors_0.name
+FROM bookshop_Authors AS Authors_0;
+```
+
+The only place where we see any sort of "generated" `_ID` fields (as a result of managed associations) is in the DDL definition for the link entity table `Books_Authors`. But that right now is pretty much an island doing nothing and connected to nothing.
 
 
