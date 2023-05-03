@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+find . -name '*.cds' | entr -sc 'cds compile --to edmx srv | bat -p -l xml'

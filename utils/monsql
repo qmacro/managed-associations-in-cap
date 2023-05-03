@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+find . -name '*.cds' | entr -sc 'cds compile --to sql srv | bat -p -l sql'
