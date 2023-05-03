@@ -363,6 +363,25 @@ SERVER: There's also now an `Authors` service endpoint, with this data:
 }
 ```
 
+By the way, both the `Books` and `Authors` entitysets appear listed in the OData service document (at <http://localhost:4004/z>) now too:
+
+```json
+{
+  "@odata.context": "$metadata",
+  "@odata.metadataEtag": "W/\"PI1HkKOvlJRM4cAkVt1IKmiUUdFecs6vCT4ciEv/l5U=\"",
+  "value": [
+    {
+      "name": "Books",
+      "url": "Books"
+    },
+    {
+      "name": "Authors",
+      "url": "Authors"
+    }
+  ]
+}
+```
+
 ## Add a basic relationship with a (one-) to-one managed association, at the persistence layer
 
 In `db/schema.cds`, add an `authors` element to the `Books` entity. This is a managed association, specifically a (one-) to-one association.
@@ -1078,3 +1097,69 @@ Of course, this is a fully functional navigation property so we can build OData 
   ```
 
 > See [Back to basics: OData - the Open Data Protocol - Part 4 - All things $filter](https://www.youtube.com/watch?v=R9JyaPYtWKs&list=PL6RpkC85SLQDYLiN1BobWXvvnhaGErkwj&index=5) and the accompanying [All things $filter](https://github.com/SAP-samples/odata-basics-handsonsapdev/blob/main/filter.md) document for more details.
+
+So everything seems to work as intended, a (one-) to-one managed association from `Books` to `Authors`, and a (one-) to-many managed association from `Authors` to `Books`, effectively providing a reverse route.
+
+## Create a link entity as the basis for a many-to-many relationship
+
+While CDS doesn't currently directly support many-to-many relationships (see [Many-to-Many Association](https://cap.cloud.sap/docs/guides/domain-models#many-to-many-associations)), they can be achieved by using a so-called "link entity" to bind two (one) to-many managed associations together.
+
+In the `srv/extend.cds` file, add a new entity `Books_Authors` so that the contents look as follows:
+
+```cds
+using bookshop from '../db/schema';
+
+extend bookshop.Books with {
+  author: Association to bookshop.Authors;
+}
+
+extend bookshop.Authors with {
+  books: Association to many bookshop.Books on books.author = $self;
+}
+
+entity Books_Authors {
+    book: Association to bookshop.Books;
+    author: Association to bookshop.Authors;
+}
+```
+
+### Notes
+
+EDMX: No change (because while there's a new entity, it's not exposed in the service definition (in `srv/main.cds`).
+
+SQL: A new table definition is added for this link entity, the DDL looks like this:
+
+```sql
+CREATE TABLE Books_Authors (
+  book_ID INTEGER,
+  author_ID INTEGER
+);
+```
+
+SERVER: No change.
+
+## Relate each of the Books and Authors entities to the new link entity
+
+Think of the link entity as a central "plumbing" facility, that just has a list of (in this case) pairs of numeric author and book IDs, linking authors and books. Then, from either side, we need to add links, one from the Books entity, and one from the Authors entity, to that central plumbing facility, i.e. the link entity.
+
+Right now, the relationships defined in `srv/extend.cds`, going from `bookshop.Books` and going from `bookshop.Authors`, go to the opposite entity, i.e. these are the two managed association definitions (see just earlier for the entire contents):
+
+```cds
+extend bookshop.Books with {
+  author: Association to bookshop.Authors;
+}
+
+extend bookshop.Authors with {
+  books: Association to many bookshop.Books on books.author = $self;
+}
+```
+
+Now we need to change those to point to the corresponding elements in the new link entity `Books_Authors`. 
+
+Modify the `srv/extend.cds` so the contents look like this:
+
+```cds
+...
+```
+
+
