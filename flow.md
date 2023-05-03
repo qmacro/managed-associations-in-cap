@@ -1077,3 +1077,4 @@ Of course, this is a fully functional navigation property so we can build OData 
   }
   ```
 
+> See [Back to basics: OData - the Open Data Protocol - Part 4 - All things $filter](https://www.youtube.com/watch?v=R9JyaPYtWKs&list=PL6RpkC85SLQDYLiN1BobWXvvnhaGErkwj&index=5) and the accompanying [All things $filter](https://github.com/SAP-samples/odata-basics-handsonsapdev/blob/main/filter.md) document for more details.
