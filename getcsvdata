@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# Simple CSV data retriever
+# Usage:
+# ./getcsvdata Books "ID,title" > targetfile.csv
+
+set -eo pipefail
+
+declare branch="csv-fields"
+declare baseurl="https://raw.githubusercontent.com/SAP-samples/cloud-cap-samples/$branch/bookshop/db/data"
+declare sourcens="sap.capire.bookshop"
+
+main() {
+
+  local entity="${1:?Specify entity e.g. \"Books\"}"
+  local fields="${2:?Specify fields e.g. \"ID,title\"}"
+
+  curl \
+    --location \
+    --silent \
+    --fail \
+    --url "$baseurl/$sourcens-$entity.csv" \
+    | mlr --csv cut -f "$fields"
+
+}
+
+main "$@"
