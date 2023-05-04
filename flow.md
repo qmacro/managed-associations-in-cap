@@ -230,7 +230,7 @@ SERVER: There's no sign of `Books` as a service endpoint (as it's not actually d
 
 ## Put the Books entity inside the service
 
-ZZ Now move the entity specification in `srv/main.cds` to within the `service` statement, so that the contents of `srv/main.cds` now look like this:
+👉 Now move the entity specification in `srv/main.cds` to within the `service` statement, so that the contents of `srv/main.cds` now look like this:
 
 ```cds
 using bookshop from '../db/schema';
@@ -323,7 +323,7 @@ SERVER: There's now a `Books` service endpoint, and selecting it (to make an ODa
 
 ## Add the Authors entity inside the service
 
-ZZ Add another entity specification within the service, for Authors, so that `srv/main.cds` now looks like this:
+👉 Add another entity specification within the service, for Authors, so that `srv/main.cds` now looks like this:
 
 ```cds
 using bookshop from '../db/schema';
@@ -444,7 +444,7 @@ By the way, both the `Books` and `Authors` entitysets appear listed in the OData
 
 ## Add a basic relationship with a to-one managed association, at the persistence layer
 
-In `db/schema.cds`, add an `authors` element to the `Books` entity. This is a managed association, specifically a (one-) to-one association.
+👉 In `db/schema.cds`, add an `author` element (note the singular element name, not `authors` plural) to the `Books` entity. This is a managed association, specifically a (one-) to-one association. The resulting contents of `db/schema.cds` should look like this:
 
 ```cds
 namespace bookshop;
@@ -462,7 +462,7 @@ entity Authors {
 
 ### Notes
 
-EDMX: A `NavigationPropertyBinding` element appears within the `EntitySet` for `Books`, pointing to the `EntitySet` for `Authors`, and the `Books` `EntityType` gets a new `Property` which is `author_ID` and also a `NavigationProperty` which has a `ReferentialConstraint` based on that property. Note that there's no change to the `Authors` `EntityType` definition at this point:
+EDMX: A `NavigationPropertyBinding` element appears within the `EntitySet` for `Books`, pointing to the `EntitySet` for `Authors`. Additionally, the `Books` `EntityType` gets a new `Property` which is `author_ID`, and also gets a `NavigationProperty` which has a `ReferentialConstraint` based on that property. Note that there's no change to the `Authors` `EntityType` definition at this point:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -532,7 +532,7 @@ CREATE VIEW Z_Authors AS SELECT
 FROM bookshop_Authors AS Authors_0;
 ```
 
-SERVER: Nothing visibly changes at the service endpoint level, but the records (entities) in the `Books` entityset now contain the new `author_ID` field, but they're all `null`:
+SERVER: Nothing visibly changes at the service endpoint level, but the records (entities) in the `Books` entityset (<http://localhost:4004/z/Books>) now contain the new `author_ID` field, but they're all `null`:
 
 ```json
 {
