@@ -16,24 +16,26 @@ There are some simple monitoring scripts in this repo (in the [utils/](./utils) 
 
 Here are the steps. In most of them, there's a "Notes" section that covers what happens to the EDMX, SQL and in the CAP server output when we perform the step activities.
 
-1. [Clone this repo and set up a new empty CAP project](#clone-this-repo-and-set-up-a-new-empty-cap-project)
-1. [Start with the basic persistence layer artifacts and set up the monitoring](#start-with-the-basic-persistence-layer-artifacts-and-set-up-monitoring)
-1. [Add an empty service](#add-an-empty-service)
-1. [Add the Books entity but not inside the service](#add-the-books-entity-but-not-inside-the-service)
-1. [Put the Books entity inside the service](#put-the-books-entity-inside-the-service)
-1. [Add the Authors entity inside the service](#add-the-authors-entity-inside-the-service)
-1. [Add a basic relationship with a to-one managed association, at the persistence layer](#add-a-basic-relationship-with-a-to-one-managed-association,-at-the-persistence-layer)
-1. [Add the author_ID field to the Books CSV data](#add-the-author_id-field-to-the-books-csv-data)
-1. [Move the current to-one managed association from the persistence layer to the service layer](#move-the-current-to-one-managed-association-from-the-persistence-layer-to-the-service-layer)
-1. [Add a reverse to-many managed association from Authors to Books](#add-a-reverse-to-many-managed-association-from-authors-to-books)
-1. [Fix the to-many managed association](#fix-the-to-many-managed-association)
-1. [Attempt to follow the to-many managed association from author to books](#attempt-to-follow-the-to-many-managed-association-from-author-to-books)
-1. [Create a link entity as the basis for a many-to-many relationship](#create-a-link-entity-as-the-basis-for-a-many-to-many-relationship)
-1. [Relate each of the Books and Authors entities to the new link entity](#relate-each-of-the-books-and-authors-entities-to-the-new-link-entity)
-1. [Add data to the link entity to relate books and authors](#add-data-to-the-link-entity-to-relate-books-and-authors)
-1. [Add a further author and book relationship to define co-authorship](#add-a-further-author-and-book-relationship-to-define-co-authorship)
+* [01 Clone this repo and set up a new empty CAP project](#01-clone-this-repo-and-set-up-a-new-empty-cap-project)
+* [02 Start with the basic persistence layer artifacts and set up the monitoring](#02-start-with-the-basic-persistence-layer-artifacts-and-set-up-monitoring)
+* [03 Add an empty service](#03-add-an-empty-service)
+* [04 Add the Books entity but not inside the service](#04-add-the-books-entity-but-not-inside-the-service)
+* [05 Put the Books entity inside the service](#05-put-the-books-entity-inside-the-service)
+* [06 Add the Authors entity inside the service](#06-add-the-authors-entity-inside-the-service)
+* [07 Add a basic relationship with a to-one managed association, at the persistence layer](#07-add-a-basic-relationship-with-a-to-one-managed-association,-at-the-persistence-layer)
+* [08 Add the author_ID field to the Books CSV data](#08-add-the-author_id-field-to-the-books-csv-data)
+* [09 Move the current to-one managed association from the persistence layer to the service layer](#09-move-the-current-to-one-managed-association-from-the-persistence-layer-to-the-service-layer)
+* [10 Add a reverse to-many managed association from Authors to Books](#10-add-a-reverse-to-many-managed-association-from-authors-to-books)
+* [11 Fix the to-many managed association](#11-fix-the-to-many-managed-association)
+* [12 Attempt to follow the to-many managed association from author to books](#12-attempt-to-follow-the-to-many-managed-association-from-author-to-books)
+* [13 Create a link entity as the basis for a many-to-many relationship](#13-create-a-link-entity-as-the-basis-for-a-many-to-many-relationship)
+* [14 Relate each of the Books and Authors entities to the new link entity](#14-relate-each-of-the-books-and-authors-entities-to-the-new-link-entity)
+* [15 Add data to the link entity to relate books and authors](#15-add-data-to-the-link-entity-to-relate-books-and-authors)
+* [16 Add a further author and book relationship to define co-authorship](#16-add-a-further-author-and-book-relationship-to-define-co-authorship)
 
-## Clone this repo and set up a new empty CAP project
+## 01 Clone this repo and set up a new empty CAP project
+
+Branch: `01-clone-this-repo-and-set-up-a-new-empty-cap-project`.
 
 We'll be starting from scratch with a new, empty CAP project, within the context of this repo (as the simple monitoring scripts you'll use are in here). 
 
@@ -54,7 +56,9 @@ cds init
 
 This should create various files and directories.
 
-## Start with the basic persistence layer artifacts and set up monitoring
+## 02 Start with the basic persistence layer artifacts and set up monitoring
+
+Branch: `02-start-with-the-basic-persistence-layer-artifacts-and-set-up-monitoring`.
 
 This is where we start the journey. Let's begin with just `Books` and `Authors` defined as entities in `db/schema.cds`, with no relationships between them. Some basic CSV data is all that we need. Note that at this point, no services are defined.
 
@@ -106,8 +110,8 @@ Now it's time to set up the monitoring.
 
 👉 Run each of the following in separate terminals (in VS Code you can use the ["split panes" facility in the integrated terminal](https://code.visualstudio.com/docs/terminal/basics#_groups-split-panes) for this):
 
-* `./util/monedmx` ("EDMX")
-* `./util/monsql` ("SQL")
+* `./utils/monedmx` ("EDMX")
+* `./utils/monsql` ("SQL")
 * `cds watch` ("SERVER")
 
 Each of these will produce output as soon as we invoke them, and will continue to monitor for changes and re-produce output as appropriate.
@@ -144,7 +148,9 @@ SERVER: Data is loaded successfully from the CSV files:
 But there is a message "No service definitions found in loaded models. Waiting for some to arrive...". Again, this makes sense, as we've not defined any services yet.
 
 
-## Add an empty service
+## 03 Add an empty service
+
+Branch: `03-add-an-empty-service`.
 
 👉 Add `service Z;` (capital `Z`) to `srv/main.cds` so that it becomes:
 
@@ -189,7 +195,9 @@ SERVER: Started. Serves capital `Z` as lower case `z`. In browser at <http://loc
 }
 ```
 
-## Add the Books entity but not inside the service
+## 04 Add the Books entity but not inside the service
+
+Branch: `04-add-the-books-entity-but-not-inside-the-service`.
 
 👉 Add an entity specification in `srv/main.cds`, but not inside the `service` statement. The content of this file should now look like this:
 
@@ -230,7 +238,9 @@ Views are most commonly used to represent the entity projections in a service. S
 
 SERVER: There's no sign of `Books` as a service endpoint (as it's not actually defined within the `Z` service, i.e. for the same reason why it's not showing in the EDMX either).
 
-## Put the Books entity inside the service
+## 05 Put the Books entity inside the service
+
+Branch: `05-put-the-books-entity-inside-the-service`.
 
 👉 Now move the entity specification in `srv/main.cds` to within the `service` statement, so that the contents of `srv/main.cds` now look like this:
 
@@ -323,7 +333,9 @@ SERVER: There's now a `Books` service endpoint, and selecting it (to make an ODa
 }
 ```
 
-## Add the Authors entity inside the service
+## 06 Add the Authors entity inside the service
+
+Branch: `06-add-the-authors-entity-inside-the-service`.
 
 👉 Add another entity specification within the service, for Authors, so that `srv/main.cds` now looks like this:
 
@@ -444,7 +456,9 @@ By the way, both the `Books` and `Authors` entitysets appear listed in the OData
 }
 ```
 
-## Add a basic relationship with a to-one managed association, at the persistence layer
+## 07 Add a basic relationship with a to-one managed association, at the persistence layer
+
+Branch: `07-add-a-basic-relationship-with-a-to-one-managed-association`.
 
 👉 In `db/schema.cds`, add an `author` element (note the singular element name, not `authors` plural) to the `Books` entity. This is a managed association, specifically a (one-) to-one association. The resulting contents of `db/schema.cds` should look like this:
 
@@ -573,7 +587,9 @@ SERVER: Nothing visibly changes at the service endpoint level, but the records (
 
 This suggests we need to add a new field to the `db/data/bookshop-Books.csv` file.
 
-## Add the author_ID field to the Books CSV data
+## 08 Add the author_ID field to the Books CSV data
+
+Branch: `08-add-the-author_id-field-to-the-books-csv-data`.
 
 👉 Open up yet another terminal pane, and use the script `./utils/csvgetdata` to retrieve the Books CSV (from the CSV data files in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo) like this:
 
@@ -712,7 +728,9 @@ The resulting resource (as usual, with OData V4, in a JSON representation), is w
 </EntityType>
 ```
 
-## Move the current to-one managed association from the persistence layer to the service layer
+## 09 Move the current to-one managed association from the persistence layer to the service layer
+
+Branch: `09-move-the-current-to-one-managed-association-from-the-persistence-layer-to-the-service-layer`.
 
 Rather than continue to work at the `db/schema.cds` level, let's move our relationship enhancements up a layer, to the service layer, and store them in an "extension" file. 
 
@@ -760,7 +778,9 @@ SERVER: When the empty file `srv/extend.cds` is first created, the server restar
 
 There is no effective difference to the service, or the data available. We've just moved the definition of the (one-) to-one managed association to a separate file at the service layer, nothing more.
 
-## Add a reverse to-many managed association from Authors to Books
+## 10 Add a reverse to-many managed association from Authors to Books
+
+Branch: `10-add-a-reverse-to-many-managed-association-from-authors-to-books`.
 
 So we can go from an author to the book(s) they wrote, we need to add a reverse association. Again, a managed association, but this time not a to-one but a a to-many managed association.
 
@@ -916,7 +936,9 @@ SERVER: The `Authors` entityset records at <http://localhost:4004/z/Authors> now
 
 > Important: As it stands, this to-many managed association isn't quite right. Given that there's only a single scalar value that can be specified for `books_ID`, how on earth could we relate an author to more than one book?
 
-## Fix the to-many managed association
+## 11 Fix the to-many managed association
+
+Branch: `11-fix-the-to-many-managed-association`.
 
 The to-many managed association won't work for what we want, we can't relate an author to more than one book. The association is only half-baked at this point anyway, as we can see from the warnings that are emitted. Let's address that now, by adding the `on` condition that the warnings mentioned.
 
@@ -1021,7 +1043,9 @@ The warnings have also gone from here too.
 
 SERVER: No change.
 
-## Attempt to follow the to-many managed association from author to book(s)
+## 12 Attempt to follow the to-many managed association from author to books
+
+Branch: `12-attempt-to-follow-the-to-many-managed-association-from-author-to-books`.
 
 The managed association is set up, and appears correct. What about the data? Do we have enough information to go from an author to the one or more books they wrote?
 
@@ -1222,7 +1246,9 @@ Of course, this is a fully functional navigation property so we can use more inv
 
 So everything seems to work as intended, a (one-) to-one managed association from `Books` to `Authors`, and a (one-) to-many managed association from `Authors` to `Books`, effectively providing a reverse route.
 
-## Create a link entity as the basis for a many-to-many relationship
+## 13 Create a link entity as the basis for a many-to-many relationship
+
+Branch: `13-create-a-link-entity-as-the-basis-for-a-many-to-many-relationship`.
 
 While CDS doesn't currently directly support many-to-many relationships (see [Many-to-Many Associations](https://cap.cloud.sap/docs/guides/domain-models#many-to-many-associations)), they can be achieved by using a so-called "link entity" to bind two (one) to-many managed associations together.
 
@@ -1260,7 +1286,9 @@ CREATE TABLE Books_Authors (
 
 SERVER: No change.
 
-## Relate each of the Books and Authors entities to the new link entity
+## 14 Relate each of the Books and Authors entities to the new link entity
+
+Branch: `14-relate-each-of-the-books-and-authors-entities-to-the-new-link-entity`.
 
 Think of the link entity as a central "plumbing" facility, that just has a list of (in this case) pairs of numeric author and book IDs, linking authors and books. Then, from either side, we need to links the `Books` entity and `Authors` entity to that central plumbing facility, i.e. the link entity.
 
@@ -1433,7 +1461,7 @@ Because of this change to the CSV file, the CAP server will restart (as we're st
 /> successfully deployed to sqlite in-memory db
 ```
 
-## Add data to the link entity to relate books and authors
+## 15 Add data to the link entity to relate books and authors
 
 The `Books_Authors` link entity is represented at the persistence layer with a simple table which we know is defined like this:
 
@@ -1618,7 +1646,7 @@ We can use the power of OData V4 to make the second jump so that we effectively 
 }
 ```
 
-## Add a further author and book relationship to define co-authorship
+## 16 Add a further author and book relationship to define co-authorship
 
 As a final test, let's create a fictional collaboration between Ellis Bell and Emily Brontë. Ellis Bell was the pseudonym under which Emily Brontë wrote Wuthering Heights, so it sort of makes sense. Or maybe it doesn't. Anyway. 
 
