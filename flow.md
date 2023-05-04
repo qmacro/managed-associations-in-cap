@@ -573,7 +573,7 @@ This suggests we need to add a new field to the `db/data/bookshop-Books.csv` fil
 
 ## Add the author_ID field to the Books CSV data
 
-ZZ Use the script `./utils/csvgetdata` to retrieve the Books CSV (from the CSV data files in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo) like this:
+👉 Use the script `./utils/csvgetdata` to retrieve the Books CSV (from the CSV data files in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo) like this:
 
 ```shell
 ./utils/csvgetdata Books ID,title,author_ID
@@ -590,7 +590,7 @@ ID,title,author_ID
 271,Catweazle,170
 ```
 
-ZZ Run this again, but this time redirect the output to the `db/data/bookshop-Books.csv` file:
+👉 Run this again, but this time redirect the output to the `db/data/bookshop-Books.csv` file:
 
 ```shell
 ./utils/csvgetdata Books ID,title,author_ID > db/data/bookshop-Books.csv
@@ -712,18 +712,31 @@ The resulting resource (as usual, with OData V4, in a JSON representation), is w
 
 Rather than continue to work at the `db/schema.cds` level, let's move our relationship enhancements up a layer, to the service layer, and store them in an "extension" file. 
 
-ZZ First, create a new, empty file `srv/extend.cds`. 
+👉 First, create a new, empty file `srv/extend.cds`. 
 
-ZZ Next, remove the `author` element from the `Books` entity in `db/schema.cds` and add it as part of the following in the new `srv/extend.cds` (noting that the association target must now be specified with the namespace prefix, as `bookshop.Authors`, and not just `Authors`). Save the changes to both files at the same time:
+👉 Next, carry out the following changes, and make them both before you save the files (it's easier to observe the effects this way):
 
+* Remove the `author` element from the `Books` entity in `db/schema.cds`, so the entity definition goes back to looking like this:
+  ```cds
+  entity Books {
+    key ID : Integer;
+    title  : String;
+  }
+  ```
 
-```cds
-using bookshop from '../db/schema';
+* Add the element back in, but this time as part of the following in the new `srv/extend.cds` :
+  ```cds
+  using bookshop from '../db/schema';
 
-extend bookshop.Books with {
-  author: Association to bookshop.Authors;
-}
-```
+  extend bookshop.Books with {
+    author: Association to bookshop.Authors;
+  }
+  ```
+
+  > Note that the association target must now be specified with the namespace prefix, as `bookshop.Authors`, and not just `Authors`.
+
+👉 Save the changes to both files once you've made both of these changes.
+
 
 ### Notes
 
