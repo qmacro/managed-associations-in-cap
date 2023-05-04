@@ -1505,7 +1505,7 @@ But with our `srv/extend.cds` file, we're already thinking philosophically about
 
 In order to successfully reference that `Z` service, which is defined in `srv/main.cds`, we need to bring the definition in.
 
-ZZ So add a `using` line and an `extend service` clause to `srv/extend.cds`, so that the contents end up looking like this:
+👉 So add a `using` line and an `extend service` clause to `srv/extend.cds`, so that the contents end up looking like this:
 
 ```cds
 using bookshop from '../db/schema';
