@@ -201,7 +201,7 @@ entity Books as projection on bookshop.Books;
 
 ### Notes
 
-EDMX: Remains unchanged, as a basic and still empty service.
+EDMX: This remains unchanged, as a basic and still empty service. Not surprisingly, as the entity we've just added wasn't within the context of the `Z` service (or any service).
 
 SQL: A `CREATE VIEW` DDL stanza appears but note that the entity is not prefixed with any service name, i.e. `CREATE VIEW Books`, not `CREATE VIEW z_Books`:
 
@@ -224,13 +224,13 @@ CREATE VIEW Books AS SELECT
 FROM bookshop_Books AS Books_0;
 ```
 
-SERVER: No sign of `Books` as a service endpoint (as it's not actually defined within the `Z` service).
+Views are most commonly used to represent the entity projections in a service. So from a persistence layer perspective, things are ready for this entity projection.
+
+SERVER: There's no sign of `Books` as a service endpoint (as it's not actually defined within the `Z` service, i.e. for the same reason why it's not showing in the EDMX either).
 
 ## Put the Books entity inside the service
 
-Move the entity specification in `srv/main.cds` to within the `service` statement:
-
-**`srv/main.cds`**
+ZZ Now move the entity specification in `srv/main.cds` to within the `service` statement, so that the contents of `srv/main.cds` now look like this:
 
 ```cds
 using bookshop from '../db/schema';
@@ -291,7 +291,7 @@ CREATE VIEW Z_Books AS SELECT
 FROM bookshop_Books AS Books_0;
 ```
 
-SERVER: There's now a `Books` service endpoint, and selecting it (to make an OData query operation on the entityset) returns the data in the CSV file - ID and title values:
+SERVER: There's now a `Books` service endpoint, and selecting it (to make an OData query operation on the entityset, i.e. <http://localhost:4004/z/Books>) returns the data sourced from the CSV file - ID and title values:
 
 ```json
 {
@@ -323,9 +323,7 @@ SERVER: There's now a `Books` service endpoint, and selecting it (to make an ODa
 
 ## Add the Authors entity inside the service
 
-Add another entity specification within the service, for Authors:
-
-**`srv/main.cds`**
+ZZ Add another entity specification within the service, for Authors, so that `srv/main.cds` now looks like this:
 
 ```cds
 using bookshop from '../db/schema';
@@ -399,7 +397,7 @@ CREATE VIEW Z_Authors AS SELECT
 FROM bookshop_Authors AS Authors_0;
 ```
 
-SERVER: There's also now an `Authors` service endpoint, with this data:
+SERVER: There's also now an `Authors` service endpoint (at <http://localhost:4004/z/Authors>), with this data:
 
 ```json
 {
