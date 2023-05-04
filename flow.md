@@ -506,6 +506,8 @@ EDMX: A `NavigationPropertyBinding` element appears within the `EntitySet` for `
 </edmx:Edmx>
 ```
 
+(The OData documentation on [NavigationPropertyBinding](http://docs.oasis-open.org/odata/odata/v4.0/cos01/part3-csdl/odata-v4.0-cos01-part3-csdl.html#_Toc372793991) has details on this element, including the `Target` attribute.)
+
 SQL: A new element `author_ID` appears in the DDL statement for creating the `bookshop_Books` table, and is referenced in the DDL statement for creating the `Z_Books` view too:
 
 ```sql
@@ -758,9 +760,9 @@ There is no effective difference to the service, or the data available. We've ju
 
 ## Add a reverse to-many managed association from Authors to Books
 
-So we can go from an author to the book(s) they wrote, we need to add a reverse association. Again, a managed association, but this time a to-many one.
+So we can go from an author to the book(s) they wrote, we need to add a reverse association. Again, a managed association, but this time not a to-one but a a to-many managed association.
 
-In the `srv/extend.cds` file, add another `extend` stanza so the entire contents look like this (do not specify the `on` condition at this point):
+👉 In the `srv/extend.cds` file, add another `extend` stanza so the entire contents look like this (do not specify any `on` condition at this point):
 
 ```cds
 using bookshop from '../db/schema';
@@ -776,6 +778,8 @@ extend bookshop.Authors with {
 
 ### Notes
 
+> If you don't see the warnings described as follows, simply restart the `./utils/monedmx` and `./utils/monsql` scripts.
+
 EDMX: There are warnings when generating the EDMX, as follows:
 
 ```log
@@ -783,9 +787,12 @@ EDMX: There are warnings when generating the EDMX, as follows:
 [WARNING] srv/main.cds:5:10: An association can't have cardinality "to many" without an ON-condition (in entity:“Z.Authors”/element:“books”)
 ```
 
-See the [(One-)To-Many Associations](https://cap.cloud.sap/docs/guides/domain-models#one--to-many-associations) section of Capire for details. Both warnings relate to the same issue (the `Association to many bookshop.Books`), just from two different perspectives, in the `srv/extend.cds` and `srv/main.cds` files.
+See the [(One-)To-Many Associations](https://cap.cloud.sap/docs/guides/domain-models#one--to-many-associations) section of Capire for details. Both warnings relate to the same issue (the `Association to many bookshop.Books`), just from two different perspectives: 
 
-There have, though, been some additions to the metadata. 
+* in the `srv/extend.cds` file
+* in the `srv/main.cds` file
+
+Despite these warnings, there have, though, been some additions to the metadata. 
 
 In the `EntityContainer` area, the `Authors` `EntitySet` now has a `NavigationPropertyBinding` pointing to the `Books` `EntitySet`. So instead of just:
 
@@ -875,7 +882,7 @@ CREATE VIEW Z_Authors AS SELECT
 FROM bookshop_Authors AS Authors_0;
 ```
 
-SERVER: The `Authors` entityset records now show that new `books_ID` element, and the value for each one is `null`:
+SERVER: The `Authors` entityset records at <http://localhost:z/Authors> now show that new `books_ID` element, and the value for each one is `null`:
 
 ```json
 {
