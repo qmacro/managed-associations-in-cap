@@ -1723,7 +1723,9 @@ Not only that, but now that the relationships are back in the EDMX, we can follo
   }
   ```
 
-There's no data in these followed navigation properties, because we removed the only link between the two entities when we removed the `author_ID` field from the data in the previous step. But notice, before we continue, that the value of the navigation property `authors` is an array. Not a scalar, like it was when we had `author_ID`, i.e. before we went from just a one-to-many relationship between authors and books to where we are now, where we have a many-to-many relationship. And it's a similar situation for the `books` navigation property in the records of the `Authors` entityset too.
+There's no data in these followed navigation properties, because we removed the only link between the two entities when we removed the `author_ID` field from the data in the previous step. 
+
+But notice, before we continue, that the value of the navigation property `authors` is an array. Not a scalar, like it was when we had `author_ID`, i.e. before we went from just a one-to-many relationship between authors and books to where we are now, where we have a many-to-many relationship. And it's a similar situation for the `books` navigation property in the records of the `Authors` entityset too.
 
 ## 16 Add data to the link entity to relate books and authors
 
@@ -1912,7 +1914,7 @@ Branch: `17-add-a-further-author-and-book-relationship-to-define-co-authorship`.
 
 As a final test, let's create a fictional collaboration between Ellis Bell and Emily Brontë. Ellis Bell was the pseudonym under which Emily Brontë wrote Wuthering Heights, so it sort of makes sense. Or maybe it doesn't. Anyway. 
 
-Add a new record to the end of `db/data/bookshop-Authors.csv` to represent Ellis Bell, so it looks like this:
+👉 Add a new record to the end of `db/data/bookshop-Authors.csv` to represent Ellis Bell, so it looks like this:
 
 ```csv
 ID,name
@@ -1923,7 +1925,7 @@ ID,name
 102,Ellis Bell
 ```
 
-Also add a new record to the end of `db/data/Books_Authors.csv` to link book Wuthering Heights (ID 201) with author Ellis Bell (102), so it looks like this:
+👉 Also add a new record to the end of `db/data/Books_Authors.csv` to link book Wuthering Heights (ID 201) with author Ellis Bell (102), so it looks like this:
 
 ```csv
 book_ID,author_ID
