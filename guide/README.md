@@ -191,7 +191,7 @@ Within the main `Schema` section, the `EntityContainer` contains nothing, and th
 
 SQL: No change.
 
-SERVER: Started. Serves capital `Z` as lower case `z`. In browser at <http://localhost:4004> service and metadata document links are shown, but there are no service endpoints. The metadata document appears as the EDMX above. The service document has no real content; the important part (the list of entitysets available, in the `value` property) is empty:
+SERVER: The message about no service definitions being found goes away and we see that it is serving service `Z` as lower case `z` (this is a CAP convention which can be overridden). At <http://localhost:4004> links to the standard OData service document and metadata document are shown, but there are no service endpoints. The metadata document (<http://localhost:4004/$metadata>) appears as the EDMX above. The service document (<http://localhost:4004/z>) has no real content; the important part (the list of entitysets available, in the `value` property) is empty: 
 
 ```json
 {
@@ -242,7 +242,7 @@ FROM bookshop_Books AS Books_0;
 
 Views are most commonly used to represent the entity projections in a service. So from a persistence layer perspective, things are ready for this entity projection.
 
-SERVER: There's no sign of `Books` as a service endpoint (as it's not actually defined within the `Z` service, i.e. for the same reason why it's not showing in the EDMX either).
+SERVER: There's no sign of `Books` as a service endpoint at <http://localhost:4004/> (as it's not actually defined within the `Z` service, i.e. for the same reason why it's not showing in the EDMX either).
 
 ## 05 Put the Books entity inside the service
 
@@ -309,7 +309,7 @@ CREATE VIEW Z_Books AS SELECT
 FROM bookshop_Books AS Books_0;
 ```
 
-SERVER: There's now a `Books` service endpoint, and selecting it (to make an OData query operation on the entityset, i.e. <http://localhost:4004/z/Books>) returns the data sourced from the CSV file - ID and title values:
+SERVER: There's now a `Books` service endpoint shown at <http://localhost:4004>, and selecting it (to make an OData query operation on the entityset, i.e. <http://localhost:4004/z/Books>) returns the data sourced from the CSV file, with ID and title values:
 
 ```json
 {
@@ -356,7 +356,7 @@ service Z {
 
 ### Notes
 
-EDMX: A further `EntityType` and `EntitySet` pair appears, but note there are no navigation properties between the two entities yet:
+EDMX: A further `EntityType` and `EntitySet` pair appears, but note that there are no navigation properties between the two entities yet:
 
 ```xml
 <edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
@@ -417,7 +417,7 @@ CREATE VIEW Z_Authors AS SELECT
 FROM bookshop_Authors AS Authors_0;
 ```
 
-SERVER: There's also now an `Authors` service endpoint (at <http://localhost:4004/z/Authors>), with this data:
+SERVER: There's also now an `Authors` service endpoint shown at <http://localhost:4004>, i.e. <http://localhost:4004/z/Authors>, with this data:
 
 ```json
 {
@@ -484,7 +484,9 @@ entity Authors {
 
 ### Notes
 
-EDMX: A `NavigationPropertyBinding` element appears within the `EntitySet` for `Books`, pointing to the `EntitySet` for `Authors`. Additionally, the `Books` `EntityType` gets a new `Property` which is `author_ID`, and also gets a `NavigationProperty` which has a `ReferentialConstraint` based on that property. Note that there's no change to the `Authors` `EntityType` definition at this point:
+EDMX: Suddenly we can see relationships expressed in the OData entity data model. A `NavigationPropertyBinding` element appears within the `EntitySet` for `Books`, pointing to the `EntitySet` for `Authors`. 
+
+Additionally, the `Books` `EntityType` gets a new `Property` which is `author_ID`, and also gets a `NavigationProperty` which has a `ReferentialConstraint` based on that property. Note that there's no change to the `Authors` `EntityType` definition at this point:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -526,7 +528,7 @@ EDMX: A `NavigationPropertyBinding` element appears within the `EntitySet` for `
 </edmx:Edmx>
 ```
 
-(The OData documentation on [NavigationPropertyBinding](http://docs.oasis-open.org/odata/odata/v4.0/cos01/part3-csdl/odata-v4.0-cos01-part3-csdl.html#_Toc372793991) has details on this element, including the `Target` attribute.)
+(See the OData documentation on [NavigationPropertyBinding](http://docs.oasis-open.org/odata/odata/v4.0/cos01/part3-csdl/odata-v4.0-cos01-part3-csdl.html#_Toc372793991) for more information.)
 
 SQL: A new element `author_ID` appears in the DDL statement for creating the `bookshop_Books` table, and is referenced in the DDL statement for creating the `Z_Books` view too:
 
@@ -556,7 +558,9 @@ CREATE VIEW Z_Authors AS SELECT
 FROM bookshop_Authors AS Authors_0;
 ```
 
-SERVER: Nothing visibly changes at the service endpoint level, but the records (entities) in the `Books` entityset (<http://localhost:4004/z/Books>) now contain the new `author_ID` field, but they're all `null`:
+This `author_ID` element is created automatically by CAP; this is a small part of what managed associations are all about, abstracting the underlying persistence layer and doing the "foreign key thinking" for you.
+
+SERVER: Nothing visibly changes at the service endpoint level, but the records (entities) in the `Books` entityset (<http://localhost:4004/z/Books>) now contain the new `author_ID` field. Don't get too excited yet, because right now they're all `null` of course:
 
 ```json
 {
@@ -591,13 +595,13 @@ SERVER: Nothing visibly changes at the service endpoint level, but the records (
 }
 ```
 
-This suggests we need to add a new field to the `db/data/bookshop-Books.csv` file.
+This suggests we need to add a new field to the `db/data/bookshop-Books.csv` file, with some corresponding data.
 
 ## 08 Add the author_ID field to the Books CSV data
 
 Branch: `08-add-the-author_id-field-to-the-books-csv-data`.
 
-👉 Open up yet another terminal pane, and use the script `./utils/csvgetdata` to retrieve the Books CSV (from the CSV data files in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo) like this:
+👉 Open up yet another terminal, and use the script `./utils/csvgetdata` to retrieve the Books CSV (from the CSV data files in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo) like this:
 
 ```shell
 ./utils/csvgetdata Books ID,title,author_ID
@@ -622,7 +626,7 @@ ID,title,author_ID
 
 Now we have the values for `author_ID` in the Books data.
 
-> You can close this terminal pane again, or leave it around as you'll be running another script later on.
+> You might want to leave this terminal around as you'll be running another script later on.
 
 ### Notes
 
@@ -783,6 +787,19 @@ SERVER: When the empty file `srv/extend.cds` is first created, the server restar
 ```
 
 There is no effective difference to the service, or the data available. We've just moved the definition of the (one-) to-one managed association to a separate file at the service layer, nothing more.
+
+Incidentally, if you didn't manage to save both files at the same time, that's fine, it's just that you will have encountered one of two possible errors (both temporary) in the CAP server log output, depending on which file you saved first:
+
+* If you saved the removal of the `author:  Association to Authors;` line in the `db/schema.cds` file first, you may have seen the following error, because you'd removed the managed association, which had been responsible for the creation of the `author_ID` element (to act as a foreign key), and which would have therefore been removed, causing a CSV import error thus:
+  ```log
+  [ERROR] SQLITE_ERROR: table bookshop_Books has no column named author_ID in: 
+  INSERT INTO bookshop_Books ( ID, title, author_ID ) VALUES ( ?, ?, ? )
+  ```
+
+* If you saved the contents of the new `srv/extend.cds` first, then you would have of course effectively defined an `author` element a second time on the same entity (`Books`, in the `bookshop` namespace), and would have caused the following error:
+  ```log
+  [ERROR] srv/extend.cds:4:3-9: Duplicate definition of element “author” (in entity:“bookshop.Books”/element:“author”)
+  ```
 
 ## 10 Add a reverse to-many managed association from Authors to Books
 
