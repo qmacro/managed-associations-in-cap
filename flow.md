@@ -8,8 +8,8 @@ The journey leads you on a path that ends up with a simple OData V4 service prov
 
 You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. There are some simple monitoring scripts in this repo (in the [utils/](./utils) directory) to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer.
 
-1. [#monitoring-setup](Monitoring setup)
-1. [#starting-point](Starting point)
+1. [Monitoring setup](#monitoring-setup)
+1. [Starting point](#starting-point)
 
 ## Monitoring setup
 
