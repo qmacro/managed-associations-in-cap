@@ -7,7 +7,7 @@
 
 set -eo pipefail
 
-declare branch="csv-fields"
+declare branch="main"
 declare baseurl="https://raw.githubusercontent.com/SAP-samples/cloud-cap-samples/$branch/bookshop/db/data"
 declare sourcens="sap.capire.bookshop"
 
