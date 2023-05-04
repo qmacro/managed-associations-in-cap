@@ -2,13 +2,13 @@
 
 This series of steps will take us on a journey exploring managed associations in the SAP Cloud Application Programming Model, where we go from a simple one-to-one managed association and ultimately end up at the stage where we've created a many-to-many relationship between two entities using a pair of to-many managed associations and a link entity to join them together.
 
-The journey is based on [the simplest thing that could possibly work](http://c2.com/xp/DoTheSimplestThingThatCouldPossiblyWork.html): two classic entities Books and Authors, with the minimum number of elements. The data is classic too, taken from the bookshop sample and containing a handful of publications and authors. The journey starts with the two entities independent of each other, and the relationships are built up from there. Throughout, we monitor the generation of two key components - the OData metadata (in EDMX) and the SQL DDL statements that are generated for the persistence layer. We also monitor the output of the CAP server, which we run in "watch" mode. For everything we monitor, we examine any warnings or errors as they occur too, as well as make sure we understand what changes, and why.
+The journey is based on [the simplest thing that could possibly work](http://c2.com/xp/DoTheSimplestThingThatCouldPossiblyWork.html): two classic entities Books and Authors, with the minimum number of elements. The data is classic too, taken from the bookshop sample in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo, and contains just a handful of publications and authors. The journey starts with the two entities independent of each other, and the relationships are built up from there. Throughout, we monitor the generation of two key components - the OData metadata (in EDMX) and the SQL DDL statements that are generated for the persistence layer. We also monitor the output of the CAP server, which we run in "watch" mode. For everything we monitor, we examine any warnings or errors as they occur too, as well as make sure we understand what changes, and why.
 
 The journey leads us on a path that ends up with a simple OData V4 service providing Books and Authors data, ultimately one that allows for books to have multiple authors, and authors to have written multiple books. But the important part of the journey is not that destination, it's the path we will take.
 
 You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. 
 
-> The instructions here will assume you're using Microsoft VS Code and that you have that set up already along with the SAP Cloud Application Programming Model development kit (Node.js) installed. It also assumes you have enough familiarity with VS Code to be able to create and edit files and run commands in the integrated terminal.
+> The instructions here will assume you're using Microsoft VS Code and that you have that set up already along with the SAP Cloud Application Programming Model development kit (Node.js) installed. It also assumes you have enough familiarity with VS Code to be able to create and edit files and run commands in the integrated terminal. It requires basic command line tools plus the command line CSV utility [miller](https://miller.readthedocs.io/en/latest/).
 
 There are some simple monitoring scripts in this repo (in the [utils/](./utils) directory) to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer.
 
@@ -571,10 +571,10 @@ This suggests we need to add a new field to the `db/data/bookshop-Books.csv` fil
 
 ## Add the author_ID field to the Books CSV data
 
-In the `utils/` dir, use `addpath` to add the dir to the PATH environment variable. Then go back to the project root and use `csvgetdata` to retrieve the Books CSV like this:
+ZZ Use the script `./utils/csvgetdata` to retrieve the Books CSV (from the CSV data files in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo) like this:
 
 ```shell
-csvgetdata Books ID,title,author_ID
+./utils/csvgetdata Books ID,title,author_ID
 ```
 
 This should produce something like this:
@@ -588,10 +588,10 @@ ID,title,author_ID
 271,Catweazle,170
 ```
 
-Redirect this to the `db/data/bookshop-Books.csv` file:
+ZZ Run this again, but this time redirect the output to the `db/data/bookshop-Books.csv` file:
 
 ```shell
-csvgetdata Books ID,title,author_ID > db/data/bookshop-Books.csv
+./utils/csvgetdata Books ID,title,author_ID > db/data/bookshop-Books.csv
 ```
 
 Now we have the values for `author_ID` in the Books data.
@@ -637,7 +637,7 @@ SERVER: Restarts, and now the `Books` entityset's records (at <http://localhost:
 }
 ```
 
-This means we can use the `$expand` system query option from Books to follow the `author` navigation property, e.g. <http://localhost:4004/z/Books?$expand=author>, where we can see the (one-) to-one relationship where right now a book has one author and only one author:
+This is enough to satisfy and support the basic relationship we have now between `Books` and `Authors`, which in turn means we can use OData's `$expand` system query option when requesting the `Books` entityset, to follow the `author` navigation property, i.e. <http://localhost:4004/z/Books?$expand=author>. The resulting resource, again, by default with OData V4 in a JSON representation, is where we can see the (one-) to-one relationship and where -- right now -- a book has one author and only one author:
 
 ```json
 {
