@@ -916,7 +916,9 @@ SERVER: The `Authors` entityset records at <http://localhost:4004/z/Authors> now
 
 ## Fix the to-many managed association
 
-The to-many managed association won't work for what we want, we can't relate an author to more than one book. The association is only half-baked at this point anyway, as we can see from the warnings that are emitted. Let's address that now, by adding the `on` condition. After adding it, the contents of the `srv/extend.cds` should look like this:
+The to-many managed association won't work for what we want, we can't relate an author to more than one book. The association is only half-baked at this point anyway, as we can see from the warnings that are emitted. Let's address that now, by adding the `on` condition that the warnings mentioned.
+
+ZZ Modify the to-many association in the `srv/extend.cds` so it looks like this:
 
 ```cds
 using bookshop from '../db/schema';
@@ -932,7 +934,7 @@ extend bookshop.Authors with {
 
 ### Notes
 
-EDMX: There are no further changes to the details of the `Authors` `EntitySet`, it is as it was before we added the `on` condition:
+EDMX: The warnings have now gone. There are no further changes to the details of the `Authors` `EntitySet`, it is as it was before we added the `on` condition:
 
 ```xml
 <EntityContainer Name="EntityContainer">
@@ -983,7 +985,7 @@ But more crucially, this property:
 <Property Name="books_ID" Type="Edm.Int32"/>
 ```
 
-has now disappeared again. This makes sense, in that it absolutely didn't make sense to have a `book_ID` property to link an author to potential multiple books. 
+has now disappeared again. This makes sense, in that it absolutely didn't make sense to have a `book_ID` property to link an author to potentially multiple books. 
 
 SQL: Correspondingly, the `book_ID` element has now disappeared again from both the table and the view DDL statements:
 
@@ -1012,6 +1014,8 @@ CREATE VIEW Z_Authors AS SELECT
   Authors_0.name
 FROM bookshop_Authors AS Authors_0;
 ```
+
+The warnings have also gone from here too.
 
 SERVER: No change.
 
@@ -1042,7 +1046,7 @@ ID,name
 
 Note that there is no field in this authors data that explicitly points to book identifier(s). The relationships are maintained in the books data, simply in the `author_ID` field.
 
-First, make a simple OData query operation to retrieve the Authors entityset <http://localhost:4004/z/Authors>:
+ZZ First, make a simple OData query operation to retrieve the Authors entityset <http://localhost:4004/z/Authors>:
 
 ```json
 {
@@ -1068,9 +1072,9 @@ First, make a simple OData query operation to retrieve the Authors entityset <ht
 }
 ```
 
-This reflects exactly the fields and data within, in the CSV file. No `book_ID` any more.
+This reflects exactly the fields and data within the `db/data/bookshop-Authors.csv` file. No `book_ID` any more.
 
-Now use the `$expand` system query option to follow the navigation property (this one `<NavigationProperty Name="books" Type="Collection(Z.Books)" Partner="author"/>`) <http://localhost:4004/z/Authors?$expand=books> - this should return something like this:
+ZZ Now use the `$expand` system query option to follow the navigation property (this one: `<NavigationProperty Name="books" Type="Collection(Z.Books)" Partner="author"/>`) <http://localhost:4004/z/Authors?$expand=books> - this should return something like this:
 
 ```json
 {
