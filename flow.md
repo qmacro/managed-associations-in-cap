@@ -8,8 +8,24 @@ The journey leads you on a path that ends up with a simple OData V4 service prov
 
 You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. There are some simple monitoring scripts in this repo (in the [utils/](./utils) directory) to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer.
 
+Here are the steps. In most of them, there's a "Notes" section that covers what happens to the EDMX, SQL and in the CAP server output when you perform the step activities.
+
 1. [Monitoring setup](#monitoring-setup)
 1. [Starting point](#starting-point)
+1. [Add empty service](#add-empty-service)
+1. [Add Books entity but not inside the service](#add-books-entity-but-not-inside-the-service)
+1. [Put Books entity inside the service](#put-books-entity-inside-the-service)
+1. [Add Authors entity inside the service](#add-authors-entity-inside-the-service)
+1. [Add a basic relationship with a to-one managed association, at the persistence layer](#add-a-basic-relationship-with-a-to-one-managed-association,-at-the-persistence-layer)
+1. [Add author_ID field to the Books CSV data](#add-author_id-field-to-the-books-csv-data)
+1. [Move the current to-one managed association from the persistence layer to the service layer.](#move-the-current-to-one-managed-association-from-the-persistence-layer-to-the-service-layer.)
+1. [Add a reverse to-many managed association from Authors to Books](#add-a-reverse-to-many-managed-association-from-authors-to-books)
+1. [Fix the to-many managed association](#fix-the-to-many-managed-association)
+1. [Attempt to follow the to-many managed association from author to books](#attempt-to-follow-the-to-many-managed-association-from-author-to-books)
+1. [Create a link entity as the basis for a many-to-many relationship](#create-a-link-entity-as-the-basis-for-a-many-to-many-relationship)
+1. [Relate each of the Books and Authors entities to the new link entity](#relate-each-of-the-books-and-authors-entities-to-the-new-link-entity)
+1. [Add data to the link entity to relate books and authors](#add-data-to-the-link-entity-to-relate-books-and-authors)
+1. [Add a further author and book relationship to define co-authorship](#add-a-further-author-and-book-relationship-to-define-co-authorship)
 
 ## Monitoring setup
 
@@ -23,9 +39,11 @@ Each of these will produce output as soon as you invoke them, and will continue 
 
 ## Starting point
 
-This is the starting point. Let's begin with just `Books` and `Authors` defined as entities in `db/schema.cds`, with no relationships between them. Some basic CSV data is all that we need. Note that at this point, no services are defined.
+This is where we start the journey. Let's begin with just `Books` and `Authors` defined as entities in `db/schema.cds`, with no relationships between them. Some basic CSV data is all that we need. Note that at this point, no services are defined.
 
-**`db/schema.cds`**
+👉 Prepare the following files and content.
+
+In `db/schema.cds`:
 
 ```cds
 namespace bookshop;
@@ -40,13 +58,13 @@ entity Authors {
 }
 ```
 
-**`srv/main.cds`**
+In `srv/main.cds`:
 
 ```cds
 using bookshop from '../db/schema';
 ```
 
-**`db/data/bookshop-Books.csv`**
+In `db/data/bookshop-Books.csv`:
 
 ```csv
 ID,title
@@ -57,7 +75,7 @@ ID,title
 271,Catweazle
 ```
 
-**`db/data/bookshop-Authors.csv`**
+In `db/data/bookshop-Authors.csv`:
 
 ```csv
 ID,name
@@ -395,7 +413,7 @@ By the way, both the `Books` and `Authors` entitysets appear listed in the OData
 }
 ```
 
-## Add a basic relationship with a (one-) to-one managed association, at the persistence layer
+## Add a basic relationship with a to-one managed association, at the persistence layer
 
 In `db/schema.cds`, add an `authors` element to the `Books` entity. This is a managed association, specifically a (one-) to-one association.
 
@@ -647,7 +665,7 @@ This means we can use the `$expand` system query option from Books to follow the
 
 > Important: There is no change to the Authors entityset, and we cannot go the other way, i.e. we can not go from author to book. There is no navigation property available for that.
 
-## Move the current (one-) to-one managed association from the persistence layer to the service layer.
+## Move the current to-one managed association from the persistence layer to the service layer.
 
 Rather than continue to work at the `db/schema.cds` level, let's move our relationship enhancements up a layer, to the service layer, and store them in an "extension" file. First, create a new, empty file `srv/extend.cds`. 
 
@@ -680,7 +698,7 @@ SERVER: When the empty file `srv/extend.cds` is first created, the server restar
 
 There is no effective difference to the service, or the data available. We've just moved the definition of the (one-) to-one managed association to a separate file at the service layer, nothing more.
 
-## Add a reverse (one-) to-many managed association from Authors to Books
+## Add a reverse to-many managed association from Authors to Books
 
 So we can go from an author to the book(s) they wrote, we need to add a reverse association. Again, a managed association, but this time a to-many one.
 
@@ -831,7 +849,7 @@ SERVER: The `Authors` entityset records now show that new `books_ID` element, an
 
 > Important: As it stands, this to-many managed association isn't quite right. Given that there's only a single scalar value that can be specified for `books_ID`, how on earth could we relate an author to more than one book?
 
-## Fix the (one-) to-many managed association
+## Fix the to-many managed association
 
 The to-many managed association won't work for what we want, we can't relate an author to more than one book. The association is only half-baked at this point anyway, as we can see from the warnings that are emitted. Let's address that now, by adding the `on` condition. After adding it, the contents of the `srv/extend.cds` should look like this:
 
@@ -932,7 +950,7 @@ FROM bookshop_Authors AS Authors_0;
 
 SERVER: No change.
 
-## Attempt to follow the (one-) to-many managed association from author to book(s)
+## Attempt to follow the to-many managed association from author to book(s)
 
 The managed association is set up, and appears correct. What about the data? Do we have enough information to go from an author to the one or more books they wrote?
 
