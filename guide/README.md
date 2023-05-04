@@ -1,20 +1,25 @@
 # Understanding and exploring managed associations in CAP
 
-This series of steps will take us on a journey exploring managed associations in the SAP Cloud Application Programming Model, where we go from a simple one-to-one managed association and ultimately end up at the stage where we've created a many-to-many relationship between two entities using a pair of to-many managed associations and a link entity to join them together.
+This series of steps will take us on a journey exploring managed associations in the SAP Cloud Application Programming Model, where we go from a simple one-to-one managed association and ultimately end up at the stage where we've created a many-to-many relationship between two entities using a pair of (one-) to-many managed associations and a link entity to join them together.
 
-The journey is based on [the simplest thing that could possibly work](http://c2.com/xp/DoTheSimplestThingThatCouldPossiblyWork.html): two classic entities Books and Authors, with the minimum number of elements. The data is classic too, taken from the bookshop sample in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo, and contains just a handful of publications and authors. The journey starts with the two entities independent of each other, and the relationships are built up from there. Throughout, we monitor the generation of two key components - the OData metadata (in EDMX) and the SQL DDL statements that are generated for the persistence layer. We also monitor the output of the CAP server, which we run in "watch" mode. For everything we monitor, we examine any warnings or errors as they occur too, as well as make sure we understand what changes, and why.
+The journey is based on [the simplest thing that could possibly work](http://c2.com/xp/DoTheSimplestThingThatCouldPossiblyWork.html): two classic entities books and authors, with the minimum number of elements. The data is classic too, taken from the bookshop sample in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo, and contains just a handful of publications and authors. The journey starts with the two entities independent of each other, and the relationships are built up from there. 
 
-The journey leads us on a path that ends up with a simple OData V4 service providing Books and Authors data, ultimately one that allows for books to have multiple authors, and authors to have written multiple books. But the important part of the journey is not that destination, it's the path we will take.
+Throughout, we monitor the generation of two key components - the OData metadata (in EDMX) and the SQL DDL statements that are generated for the persistence layer. We also monitor the output of the CAP server, which we run in "watch" mode. For everything we monitor, we examine any warnings or errors as they occur too, as well as make sure we understand what changes take place, and why.
+
+The journey leads us on a path that ends up with a simple OData V4 service providing books and authors data, ultimately one that allows for books to have multiple authors, and authors to have written multiple books. But the important part of the journey is not that destination, it's the path we will take.
 
 You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. 
 
-> The instructions here will assume you're using Microsoft VS Code and that you have that set up already along with the SAP Cloud Application Programming Model development kit (Node.js) installed. It also assumes you have enough familiarity with VS Code to be able to create and edit files and run commands in the integrated terminal. It requires basic command line tools plus the command line CSV utility [miller](https://miller.readthedocs.io/en/latest/).
-> If you are using VS Code, you should turn OFF the Auto Save facility, generally so you can make changes and decide when you want to observe the effects, and specifically because you'll need to make a coordinated change to a couple of files, and it's better if you make all the changes first and save them together afterwards.
+> The instructions here will assume you're using Microsoft VS Code and that you have that set up already along with the SAP Cloud Application Programming Model development kit (Node.js) installed. 
+>
+> It also assumes you have enough familiarity with VS Code to be able to create and edit files and run commands in the integrated terminal. It requires basic command line tools plus the command line CSV utility [miller](https://miller.readthedocs.io/en/latest/).
+>
+> If you are using VS Code, you should turn OFF the Auto Save facility, mostly so you can make changes and decide when you want to observe the effects, and specifically because you'll need to make a coordinated change to a couple of files, and it's better if you make all the changes first and save them together afterwards.
 > ![autosave off](assets/autosave-off.png)
 
-There are some simple monitoring scripts in this repo (in the [utils/](./utils) directory) to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer.
+There are some simple monitoring scripts in this repo, in the [utils/](./utils/) directory, to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer. Also in the [utils/](./utils/) directory are a couple of simple CSV related scripts that we'll use; these both use `miller`.
 
-Here are the steps. In most of them, there's a "Notes" part that covers what happens to the EDMX, SQL and in the CAP server output when we perform the step's activities.
+Here are the steps. In most of the steps the observations that we make (on the EDMX, SQL and CAP server output) will be in a "Notes" subsection within that step.
 
 * [01 Clone this repo and set up a new empty CAP project](#01-clone-this-repo-and-set-up-a-new-empty-cap-project)
 * [02 Start with the basic persistence layer artifacts and set up the monitoring](#02-start-with-the-basic-persistence-layer-artifacts-and-set-up-monitoring)
