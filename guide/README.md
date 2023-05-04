@@ -1468,7 +1468,7 @@ ID,title,author_ID
 👉 Now re-run it, this time specifying the `author_ID` field that we want to delete. WARNING: this will actually modify the CSV file contents directly:
 
 ```shell
-csvdelfield db/data/bookshop-Books.csv author_ID
+./utils/csvdelfield db/data/bookshop-Books.csv author_ID
 ```
 
 As well as modifying the CSV file, it will also output the new content directly:
