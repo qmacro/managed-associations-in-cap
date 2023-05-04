@@ -10,15 +10,15 @@ You can take this journey with whatever tools, IDEs, editors and command lines y
 
 Here are the steps. In most of them, there's a "Notes" section that covers what happens to the EDMX, SQL and in the CAP server output when you perform the step activities.
 
-1. [Monitoring setup](#monitoring-setup)
-1. [Starting point](#starting-point)
-1. [Add empty service](#add-empty-service)
-1. [Add Books entity but not inside the service](#add-books-entity-but-not-inside-the-service)
-1. [Put Books entity inside the service](#put-books-entity-inside-the-service)
-1. [Add Authors entity inside the service](#add-authors-entity-inside-the-service)
+1. [Set up the monitoring](#set-up-the-monitoring)
+1. [Start with the basic persistence layer artifacts](#start-with-the-basic-persistence-layer-artifacts)
+1. [Add an empty service](#add-an-empty-service)
+1. [Add the Books entity but not inside the service](#add-the-books-entity-but-not-inside-the-service)
+1. [Put the Books entity inside the service](#put-the-books-entity-inside-the-service)
+1. [Add the Authors entity inside the service](#add-the-authors-entity-inside-the-service)
 1. [Add a basic relationship with a to-one managed association, at the persistence layer](#add-a-basic-relationship-with-a-to-one-managed-association,-at-the-persistence-layer)
-1. [Add author_ID field to the Books CSV data](#add-author_id-field-to-the-books-csv-data)
-1. [Move the current to-one managed association from the persistence layer to the service layer.](#move-the-current-to-one-managed-association-from-the-persistence-layer-to-the-service-layer.)
+1. [Add the author_ID field to the Books CSV data](#add-the-author_id-field-to-the-books-csv-data)
+1. [Move the current to-one managed association from the persistence layer to the service layer](#move-the-current-to-one-managed-association-from-the-persistence-layer-to-the-service-layer)
 1. [Add a reverse to-many managed association from Authors to Books](#add-a-reverse-to-many-managed-association-from-authors-to-books)
 1. [Fix the to-many managed association](#fix-the-to-many-managed-association)
 1. [Attempt to follow the to-many managed association from author to books](#attempt-to-follow-the-to-many-managed-association-from-author-to-books)
@@ -27,7 +27,7 @@ Here are the steps. In most of them, there's a "Notes" section that covers what 
 1. [Add data to the link entity to relate books and authors](#add-data-to-the-link-entity-to-relate-books-and-authors)
 1. [Add a further author and book relationship to define co-authorship](#add-a-further-author-and-book-relationship-to-define-co-authorship)
 
-## Monitoring setup
+## Set up the monitoring 
 
 Run the following in separate terminals (in VS Code you can use the ["split panes" facility in the integrated terminal](https://code.visualstudio.com/docs/terminal/basics#_groups-split-panes) for this):
 
@@ -37,7 +37,7 @@ Run the following in separate terminals (in VS Code you can use the ["split pane
 
 Each of these will produce output as soon as you invoke them, and will continue to monitor for changes and re-produce output as appropriate.
 
-## Starting point
+## Start with the basic persistence layer artifacts
 
 This is where we start the journey. Let's begin with just `Books` and `Authors` defined as entities in `db/schema.cds`, with no relationships between them. Some basic CSV data is all that we need. Note that at this point, no services are defined.
 
@@ -107,7 +107,7 @@ CREATE TABLE bookshop_Authors (
 
 SERVER: Message "No service definitions found in loaded models. Waiting for some to arrive...".
 
-## Add empty service
+## Add an empty service
 
 Add `service Z;` (capital `Z`) to `srv/main.cds` so that it becomes:
 
@@ -154,7 +154,7 @@ SERVER: Started. Serves capital `Z` as lower case `z`. In browser, shows service
 }
 ```
 
-## Add Books entity but not inside the service
+## Add the Books entity but not inside the service
 
 Add an entity specification in `srv/main.cds` but not inside the `service` statement.
 
@@ -195,7 +195,7 @@ FROM bookshop_Books AS Books_0;
 
 SERVER: No sign of `Books` as a service endpoint (as it's not actually defined within the `Z` service).
 
-## Put Books entity inside the service
+## Put the Books entity inside the service
 
 Move the entity specification in `srv/main.cds` to within the `service` statement:
 
@@ -290,7 +290,7 @@ SERVER: There's now a `Books` service endpoint, and selecting it (to make an ODa
 }
 ```
 
-## Add Authors entity inside the service
+## Add the Authors entity inside the service
 
 Add another entity specification within the service, for Authors:
 
@@ -540,7 +540,7 @@ SERVER: Nothing visibly changes at the service endpoint level, but the records (
 
 This suggests we need to add a new field to the `db/data/bookshop-Books.csv` file.
 
-## Add author_ID field to the Books CSV data
+## Add the author_ID field to the Books CSV data
 
 In the `utils/` dir, use `addpath` to add the dir to the PATH environment variable. Then go back to the project root and use `csvgetdata` to retrieve the Books CSV like this:
 
@@ -665,7 +665,7 @@ This means we can use the `$expand` system query option from Books to follow the
 
 > Important: There is no change to the Authors entityset, and we cannot go the other way, i.e. we can not go from author to book. There is no navigation property available for that.
 
-## Move the current to-one managed association from the persistence layer to the service layer.
+## Move the current to-one managed association from the persistence layer to the service layer
 
 Rather than continue to work at the `db/schema.cds` level, let's move our relationship enhancements up a layer, to the service layer, and store them in an "extension" file. First, create a new, empty file `srv/extend.cds`. 
 
