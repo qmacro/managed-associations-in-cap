@@ -1655,7 +1655,7 @@ But what we can now see at <http://localhost:4004> is that there's now a new, th
 
 Not only that, but now that the relationships are back in the EDMX, we can follow the relationships from books to authors, and vice versa, by using the OData system query option `$expand` as normal:
 
-* For looking at authors of books with <http://localhost:8000/z/Books?$expand=authors>, we get:
+* For looking at authors of books with <http://localhost:4004/z/Books?$expand=authors>, we get:
   ```json
   {
     "@odata.context": "$metadata#Books(authors())",
@@ -1689,7 +1689,7 @@ Not only that, but now that the relationships are back in the EDMX, we can follo
   }
   ```
 
-* For looking at books of authors with <http://localhost:8000/z/Authors?$expand=books>, we get:
+* For looking at books of authors with <http://localhost:4004/z/Authors?$expand=books>, we get:
   ```json
   {
     "@odata.context": "$metadata#Authors(books())",
@@ -1827,7 +1827,7 @@ We can now traverse one level of relationships, to find the books that authors w
 
 Note that there is no author name information shown, we just get author ID information. That's because the author name is one step further on. Right now, we can see this query and result as like jumping half way across a stream to a stepping stone in the middle, which represents the link entity. To get to the other side, we need to take a second jump.
 
-We can use the power of OData V4 to make the second jump so that we effectively cover both steps in one go, from `Authors` to `Books_Authors` to `Books`, like this: [http://localhost:4004/z/Authors?$expand=books($expand=book)](http://localhost:8000/z/Authors?$expand=books($expand=book)), which will emit:
+We can use the power of OData V4 to make the second jump so that we effectively cover both steps in one go, from `Authors` to `Books_Authors` to `Books`, like this: [http://localhost:4004/z/Authors?$expand=books($expand=book)](http://localhost:4004/z/Authors?$expand=books($expand=book)), which will emit:
 
 ```json
 {
