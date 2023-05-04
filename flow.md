@@ -918,7 +918,7 @@ SERVER: The `Authors` entityset records at <http://localhost:4004/z/Authors> now
 
 The to-many managed association won't work for what we want, we can't relate an author to more than one book. The association is only half-baked at this point anyway, as we can see from the warnings that are emitted. Let's address that now, by adding the `on` condition that the warnings mentioned.
 
-ZZ Modify the to-many association in the `srv/extend.cds` so it looks like this:
+👉 Modify the to-many association in the `srv/extend.cds` so it looks like this:
 
 ```cds
 using bookshop from '../db/schema';
@@ -1046,7 +1046,7 @@ ID,name
 
 Note that there is no field in this authors data that explicitly points to book identifier(s). The relationships are maintained in the books data, simply in the `author_ID` field.
 
-ZZ First, make a simple OData query operation to retrieve the Authors entityset <http://localhost:4004/z/Authors>:
+👉 First, make a simple OData query operation to retrieve the Authors entityset <http://localhost:4004/z/Authors>:
 
 ```json
 {
@@ -1074,7 +1074,7 @@ ZZ First, make a simple OData query operation to retrieve the Authors entityset 
 
 This reflects exactly the fields and data within the `db/data/bookshop-Authors.csv` file. No `book_ID` any more.
 
-ZZ Now use the `$expand` system query option to follow the navigation property (this one: `<NavigationProperty Name="books" Type="Collection(Z.Books)" Partner="author"/>`) <http://localhost:4004/z/Authors?$expand=books> - this should return something like this:
+👉 Now use the `$expand` system query option to follow the navigation property (this one: `<NavigationProperty Name="books" Type="Collection(Z.Books)" Partner="author"/>`) <http://localhost:4004/z/Authors?$expand=books> - this should return something like this:
 
 ```json
 {
@@ -1133,16 +1133,20 @@ ZZ Now use the `$expand` system query option to follow the navigation property (
 }
 ```
 
-Of course, this is a fully functional navigation property so we can build OData query operations like these (somewhat contrived) examples:
+Great! 
 
-* Authors, listing their books that have titles that contain "the" [http://localhost:4004/z/Authors?$expand=books($filter=contains(title,'the'))](http://localhost:4004/z/Authors?$expand=books($filter=contains(title,%27the%27)))
-* Authors, listing their books but just the title information [http://localhost:4004/z/Authors?$expand=books($select=title)](http://localhost:4004/z/Authors?$expand=books($select=title)
+Of course, this is a fully functional navigation property so we can use more involved OData query operations.
+
+👉 Try these (somewhat contrived) examples:
+
+* Listing all authors, showing any of their books that have titles that contain "the" [http://localhost:4004/z/Authors?$expand=books($filter=contains(title,'the'))](http://localhost:4004/z/Authors?$expand=books($filter=contains(title,%27the%27)))
+* Listing all authors, showing their books but just the title information <http://localhost:4004/z/Authors?$expand=books($select=title)>
 * Authors that have written more than one book [http://localhost:4004/z/Authors?$filter=books/$count gt 1](http://localhost:4004/z/Authors?$filter=books/$count%20gt%201)
 * Authors that have written more than one book, listing what they wrote [http://localhost:4004/z/Authors?$filter=books/$count gt 1&$expand=books($select=title)](http://localhost:4004/z/Authors?$filter=books/$count%20gt%201&$expand=books($select=title))
-* And just a final and ridiculous example of multiple nested expands [http://localhost:4004/z/Authors?$filter=books/$count gt 1&$expand=books($expand=author($expand=books))](http://localhost:4004/z/Authors?$filter=books/$count%20gt%201&$expand=books($expand=author($expand=books))) which returns this:
+* And just a final (and slightly extreme) example of multiple nested expands [http://localhost:4004/z/Authors?$filter=books/$count gt 1&$expand=books($expand=author($expand=books($expand=author)))](http://localhost:4004/z/Authors?$filter=books/$count%20gt%201&$expand=books($expand=author($expand=books($expand=author)))) which returns this:
   ```json
   {
-    "@odata.context": "$metadata#Authors(books(author(books())))",
+    "@odata.context": "$metadata#Authors(books(author(books(author()))))",
     "value": [
       {
         "ID": 150,
@@ -1159,12 +1163,20 @@ Of course, this is a fully functional navigation property so we can build OData 
                 {
                   "ID": 251,
                   "title": "The Raven",
-                  "author_ID": 150
+                  "author_ID": 150,
+                  "author": {
+                    "ID": 150,
+                    "name": "Edgar Allen Poe"
+                  }
                 },
                 {
                   "ID": 252,
                   "title": "Eleonora",
-                  "author_ID": 150
+                  "author_ID": 150,
+                  "author": {
+                    "ID": 150,
+                    "name": "Edgar Allen Poe"
+                  }
                 }
               ]
             }
@@ -1180,12 +1192,20 @@ Of course, this is a fully functional navigation property so we can build OData 
                 {
                   "ID": 251,
                   "title": "The Raven",
-                  "author_ID": 150
+                  "author_ID": 150,
+                  "author": {
+                    "ID": 150,
+                    "name": "Edgar Allen Poe"
+                  }
                 },
                 {
                   "ID": 252,
                   "title": "Eleonora",
-                  "author_ID": 150
+                  "author_ID": 150,
+                  "author": {
+                    "ID": 150,
+                    "name": "Edgar Allen Poe"
+                  }
                 }
               ]
             }
