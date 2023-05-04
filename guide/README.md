@@ -1925,7 +1925,7 @@ ID,name
 102,Ellis Bell
 ```
 
-👉 Also add a new record to the end of `db/data/Books_Authors.csv` to link book Wuthering Heights (ID 201) with author Ellis Bell (102), so it looks like this:
+👉 Also add a new record to the end of `db/data/Books_Authors.csv` to link book Wuthering Heights (ID 201) with author Ellis Bell (ID 102), so it looks like this:
 
 ```csv
 book_ID,author_ID
