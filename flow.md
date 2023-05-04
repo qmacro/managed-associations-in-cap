@@ -4,11 +4,11 @@ This series of steps will take us on a journey exploring managed associations in
 
 The journey is based on [the simplest thing that could possibly work](http://c2.com/xp/DoTheSimplestThingThatCouldPossiblyWork.html): two classic entities Books and Authors, with the minimum number of elements. The data is classic too, taken from the bookshop sample and containing a handful of publications and authors. The journey starts with the two entities independent of each other, and the relationships are built up from there. Throughout, we monitor the generation of two key components - the OData metadata (in EDMX) and the SQL DDL statements that are generated for the persistence layer. We also monitor the output of the CAP server, which we run in "watch" mode. For everything we monitor, we examine any warnings or errors as they occur too, as well as make sure we understand what changes, and why.
 
-The journey leads you on a path that ends up with a simple OData V4 service providing Books and Authors data, ultimately one that allows for books to have multiple authors, and authors to have written multiple books. But the important part of the journey is not that destination, it's the path we will take.
+The journey leads us on a path that ends up with a simple OData V4 service providing Books and Authors data, ultimately one that allows for books to have multiple authors, and authors to have written multiple books. But the important part of the journey is not that destination, it's the path we will take.
 
 You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. There are some simple monitoring scripts in this repo (in the [utils/](./utils) directory) to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer.
 
-Here are the steps. In most of them, there's a "Notes" section that covers what happens to the EDMX, SQL and in the CAP server output when you perform the step activities.
+Here are the steps. In most of them, there's a "Notes" section that covers what happens to the EDMX, SQL and in the CAP server output when we perform the step activities.
 
 1. [Set up the monitoring](#set-up-the-monitoring)
 1. [Start with the basic persistence layer artifacts](#start-with-the-basic-persistence-layer-artifacts)
@@ -35,7 +35,7 @@ Run the following in separate terminals (in VS Code you can use the ["split pane
 * `./util/monsql` ("SQL")
 * `cds watch` ("SERVER")
 
-Each of these will produce output as soon as you invoke them, and will continue to monitor for changes and re-produce output as appropriate.
+Each of these will produce output as soon as we invoke them, and will continue to monitor for changes and re-produce output as appropriate.
 
 ## Start with the basic persistence layer artifacts
 
@@ -1313,13 +1313,13 @@ Use the utility `csvdelfield` in the `utils/` directory to do this. First, try i
 ```shell
 csvdelfield db/data/bookshop-Books.csv
 ```
-It should show you a list of current fields, like this:
+It should show a list of current fields, like this:
 
 ```log
 ID,title,author_ID
 ```
 
-Now re-run it, this time specifying the `author_ID` field that you want to delete (warning: this will actually modify the CSV file contents directly, as well as displaying the new content to you:
+Now re-run it, this time specifying the `author_ID` field that we want to delete (warning: this will actually modify the CSV file contents directly, as well as displaying the new content:
 
 ```shell
 csvdelfield db/data/bookshop-Books.csv author_ID
@@ -1436,9 +1436,9 @@ We can now traverse one level of relationships, to find the books that authors w
 }
 ```
 
-Note that there is no author name information shown, we just get author ID information. That's because the author name is one step further on. Right now, you can see this query and result as jumping half way across a stream to a stone in the middle, which represents the link entity. To get to the other side, you need to take a second jump.
+Note that there is no author name information shown, we just get author ID information. That's because the author name is one step further on. Right now, we can see this query and result as jumping half way across a stream to a stone in the middle, which represents the link entity. To get to the other side, we need to take a second jump.
 
-You can use the power of OData V4 to make the second jump so that you effectively cover both steps in one go, from `Books` to `Books_Authors` to `Authors`, like this: [http://localhost:4004/z/Authors?$expand=books($expand=book)](http://localhost:4004/z/Books?$expand=authors($expand=author)), which will emit:
+We can use the power of OData V4 to make the second jump so that we effectively cover both steps in one go, from `Books` to `Books_Authors` to `Authors`, like this: [http://localhost:4004/z/Authors?$expand=books($expand=book)](http://localhost:4004/z/Books?$expand=authors($expand=author)), which will emit:
 
 ```json
 {
