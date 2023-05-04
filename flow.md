@@ -9,6 +9,8 @@ The journey leads us on a path that ends up with a simple OData V4 service provi
 You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. 
 
 > The instructions here will assume you're using Microsoft VS Code and that you have that set up already along with the SAP Cloud Application Programming Model development kit (Node.js) installed. It also assumes you have enough familiarity with VS Code to be able to create and edit files and run commands in the integrated terminal. It requires basic command line tools plus the command line CSV utility [miller](https://miller.readthedocs.io/en/latest/).
+> If you are using VS Code, you should turn OFF the Auto Save facility, generally so you can make changes and decide when you want to observe the effects, and specifically because you'll need to make a coordinated change to a couple of files, and it's better if you make all the changes first and save them together afterwards.
+> ![autosave off](assets/autosave-off.png)
 
 There are some simple monitoring scripts in this repo (in the [utils/](./utils) directory) to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer.
 
@@ -637,7 +639,9 @@ SERVER: Restarts, and now the `Books` entityset's records (at <http://localhost:
 }
 ```
 
-This is enough to satisfy and support the basic relationship we have now between `Books` and `Authors`, which in turn means we can use OData's `$expand` system query option when requesting the `Books` entityset, to follow the `author` navigation property, i.e. <http://localhost:4004/z/Books?$expand=author>. The resulting resource, again, by default with OData V4 in a JSON representation, is where we can see the (one-) to-one relationship and where -- right now -- a book has one author and only one author:
+This is enough to satisfy and support the basic relationship we have now between `Books` and `Authors`, which in turn means we can use OData's `$expand` system query option when requesting the `Books` entityset, to follow the `author` navigation property, i.e. <http://localhost:4004/z/Books?$expand=author>. 
+
+The resulting resource (as usual, with OData V4, in a JSON representation), is where we can see the (one-) to-one relationship and where -- right now -- a book has one author and only one author:
 
 ```json
 {
@@ -692,13 +696,25 @@ This is enough to satisfy and support the basic relationship we have now between
 }
 ```
 
-> Important: There is no change to the Authors entityset, and we cannot go the other way, i.e. we can not go from author to book. There is no navigation property available for that.
+> Important: There is no change to the `Authors` entityset, and we cannot go the other way, i.e. we can not go from author to book. There is no navigation property available for that, as we can of course see from the definition of the `Authors` `EntityType` in the metadata document at <http://localhost:4004/z/$metadata>:
+
+```xml
+<EntityType Name="Authors">
+  <Key>
+    <PropertyRef Name="ID"/>
+  </Key>
+  <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+  <Property Name="name" Type="Edm.String"/>
+</EntityType>
+```
 
 ## Move the current to-one managed association from the persistence layer to the service layer
 
-Rather than continue to work at the `db/schema.cds` level, let's move our relationship enhancements up a layer, to the service layer, and store them in an "extension" file. First, create a new, empty file `srv/extend.cds`. 
+Rather than continue to work at the `db/schema.cds` level, let's move our relationship enhancements up a layer, to the service layer, and store them in an "extension" file. 
 
-Next, remove the `author` element from the `Books` entity in `db/schema.cds` and add it as part of the following in the new `srv/extend.cds` (noting that the association target must now be specified as `bookshop.Authors` and not just `Authors`). Save the changes to both files at the same time.
+ZZ First, create a new, empty file `srv/extend.cds`. 
+
+ZZ Next, remove the `author` element from the `Books` entity in `db/schema.cds` and add it as part of the following in the new `srv/extend.cds` (noting that the association target must now be specified with the namespace prefix, as `bookshop.Authors`, and not just `Authors`). Save the changes to both files at the same time:
 
 
 ```cds
