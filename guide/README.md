@@ -746,7 +746,9 @@ Rather than continue to work at the `db/schema.cds` level, let's move our relati
 
 👉 First, create a new, empty file `srv/extend.cds`. 
 
-👉 Next, carry out the following changes, and make them both before you save the files (it's easier to observe the effects this way):
+👉 Next, restart the two monitoring scripts `./utils/monedmx` and `./utils/monsql`. This is because they are based on [entr](https://eradman.com/entrproject/) which monitors changes to files, but not creation of new files, so the creation and subsequent editing of the new `srv/extend.cds` here wouldn't cause the EDMX and SQL output to be refreshed.
+
+👉 Once you've restarted the EDMX and SQL monitors, carry out the following changes, and make them both before you save the files (it's easier to observe the effects this way):
 
 * Remove the `author` element from the `Books` entity in `db/schema.cds`, so the entity definition goes back to looking like this:
   ```cds
