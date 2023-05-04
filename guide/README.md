@@ -14,7 +14,7 @@ You can take this journey with whatever tools, IDEs, editors and command lines y
 
 There are some simple monitoring scripts in this repo (in the [utils/](./utils) directory) to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer.
 
-Here are the steps. In most of them, there's a "Notes" section that covers what happens to the EDMX, SQL and in the CAP server output when we perform the step activities.
+Here are the steps. In most of them, there's a "Notes" part that covers what happens to the EDMX, SQL and in the CAP server output when we perform the step's activities.
 
 * [01 Clone this repo and set up a new empty CAP project](#01-clone-this-repo-and-set-up-a-new-empty-cap-project)
 * [02 Start with the basic persistence layer artifacts and set up the monitoring](#02-start-with-the-basic-persistence-layer-artifacts-and-set-up-monitoring)
@@ -30,8 +30,9 @@ Here are the steps. In most of them, there's a "Notes" section that covers what 
 * [12 Attempt to follow the to-many managed association from author to books](#12-attempt-to-follow-the-to-many-managed-association-from-author-to-books)
 * [13 Create a link entity as the basis for a many-to-many relationship](#13-create-a-link-entity-as-the-basis-for-a-many-to-many-relationship)
 * [14 Relate each of the Books and Authors entities to the new link entity](#14-relate-each-of-the-books-and-authors-entities-to-the-new-link-entity)
-* [15 Add data to the link entity to relate books and authors](#15-add-data-to-the-link-entity-to-relate-books-and-authors)
-* [16 Add a further author and book relationship to define co-authorship](#16-add-a-further-author-and-book-relationship-to-define-co-authorship)
+* [15 Add the link entity to the service](#15-add-the-link-entity-to-the-service)
+* [16 add data to the link entity to relate books and authors](#16-add-data-to-the-link-entity-to-relate-books-and-authors)
+* [17 add a further author and book relationship to define co-authorship](#17-add-a-further-author-and-book-relationship-to-define-co-authorship)
 
 ## 01 Clone this repo and set up a new empty CAP project
 
@@ -1461,7 +1462,243 @@ Because of this change to the CSV file, the CAP server will restart (as we're st
 /> successfully deployed to sqlite in-memory db
 ```
 
-## 15 Add data to the link entity to relate books and authors
+## 15 Add the link entity to the service
+
+We need to address the fact that we cannot navigate at all between the `Books` and `Authors` entities. We know why that is, from the warning in the previous step, which told us that no navigation properties were generated. The warning also told us why - we don't have the link entity in the service, so it was effectively "not available" for the relationship definitions.
+
+Let's fix that now. We could simply add it as a third item inside the service definition in the `srv/main.cds` file, which currently looks like this:
+
+```cds
+using bookshop from '../db/schema';
+
+service Z {
+  entity Books as projection on bookshop.Books;
+  entity Authors as projection on bookshop.Authors;
+}
+```
+
+But with our `srv/extend.cds` file, we're already thinking philosophically about treading lightly upon entity and service definitions that already exist, and instead extending and modifying them from elsewhere. In this file, we've already used the `extend` keyword to add elements to existing entities (adding `authors` to `bookshop.Books`, and `books` to `bookshop.Authors`). So let's continue on that path and add a further `extend` keyword, but this time for our `Z` service.
+
+In order to successfully reference that `Z` service, which is defined in `srv/main.cds`, we need to bring the definition in.
+
+ZZ So add a `using` line and an `extend service` clause to `srv/extend.cds`, so that the contents end up looking like this:
+
+```cds
+using bookshop from '../db/schema';
+using from './main';
+
+extend bookshop.Books with {
+  authors: Association to many Books_Authors on authors.book = $self;
+}
+
+extend bookshop.Authors with {
+  books: Association to many Books_Authors on books.author = $self;
+}
+
+entity Books_Authors {
+  book: Association to bookshop.Books;
+  author: Association to bookshop.Authors;
+}
+
+extend service Z with {
+  entity LinkEntity as projection on Books_Authors;
+}
+```
+
+That's all we need to do here.
+
+### Notes
+
+EDMX: The warnings about no navigation properties being generated now have disappeared. There is, though, a new warning that appears:
+
+```log
+[WARNING] srv/extend.cds:18:10: Expected entity to have a primary key (in entity:“Z.LinkEntity”)
+```
+
+This is fine, we're not wanting to use this link entity as a "normal" entity, so we can safely ignore this warning.
+
+More interestingly, relationships are back in the EDMX, and back with a vengeance!
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Core.V1.xml">
+    <edmx:Include Alias="Core" Namespace="Org.OData.Core.V1"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema Namespace="Z" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityContainer Name="EntityContainer">
+        <EntitySet Name="LinkEntity" EntityType="Z.LinkEntity">
+          <NavigationPropertyBinding Path="book" Target="Books"/>
+          <NavigationPropertyBinding Path="author" Target="Authors"/>
+        </EntitySet>
+        <EntitySet Name="Books" EntityType="Z.Books">
+          <NavigationPropertyBinding Path="authors" Target="LinkEntity"/>
+        </EntitySet>
+        <EntitySet Name="Authors" EntityType="Z.Authors">
+          <NavigationPropertyBinding Path="books" Target="LinkEntity"/>
+        </EntitySet>
+      </EntityContainer>
+      <EntityType Name="LinkEntity">
+        <NavigationProperty Name="book" Type="Z.Books" Partner="authors">
+          <ReferentialConstraint Property="book_ID" ReferencedProperty="ID"/>
+        </NavigationProperty>
+        <Property Name="book_ID" Type="Edm.Int32"/>
+        <NavigationProperty Name="author" Type="Z.Authors" Partner="books">
+          <ReferentialConstraint Property="author_ID" ReferencedProperty="ID"/>
+        </NavigationProperty>
+        <Property Name="author_ID" Type="Edm.Int32"/>
+      </EntityType>
+      <EntityType Name="Books">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+        <Property Name="title" Type="Edm.String"/>
+        <NavigationProperty Name="authors" Type="Collection(Z.LinkEntity)" Partner="book"/>
+      </EntityType>
+      <EntityType Name="Authors">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+        <Property Name="name" Type="Edm.String"/>
+        <NavigationProperty Name="books" Type="Collection(Z.LinkEntity)" Partner="author"/>
+      </EntityType>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
+```
+
+Here's a few pointers that will help you [stare at](https://qmacro.org/blog/posts/2017/02/19/the-beauty-of-recursion-and-list-machinery/#initialrecognition) the XML. Taking the `EntityType`s first:
+
+* There's now a new `EntityType` for the `LinkEntity`. This consists purely of a couple of `NavigationProperty` elements each paired with a sibling `Property` for the `_ID` style field generated through the managed association definition.
+* Each of the `Books` and `Authors` `EntityTypes` now has a `NavigationProperty` that points to the `LinkEntity`, specifically in a collection (i.e. a to-many) context.
+
+Now looking at the content of the `EntityContainer`:
+
+* Instead of just two simple `EntitySet`s for `Books` and `Authors` that had no relation to each other (this is what we had in the previous step as a result of the failure to generate navigation properties), we now have a beautifully balanced relationship between those `Books` and `Authors` `EntitySet`s, via a new, third `EntitySet` for our `LinkEntity`. This third `EntitySet` has `NavigationPropertyBinding`s to each of `Books` and `Authors` targets.
+
+SQL: While the change to the SQL is not as dramatic, it's still important to look at. What's different is that there's now a new DDL statement to create the view that corresponds to the link entity. The view is called `Z_LinkEntity`, i.e. with a `Z` prefix (remember that the `LinkEntity` entity lives in the `Z` service, just like the `Books` and `Authors` entities.
+
+```sql
+CREATE TABLE Books_Authors (
+  book_ID INTEGER,
+  author_ID INTEGER
+);
+
+CREATE TABLE bookshop_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(5000),
+  PRIMARY KEY(ID)
+);
+
+CREATE TABLE bookshop_Authors (
+  ID INTEGER NOT NULL,
+  name NVARCHAR(5000),
+  PRIMARY KEY(ID)
+);
+
+CREATE VIEW Z_LinkEntity AS SELECT
+  Books_Authors_0.book_ID,
+  Books_Authors_0.author_ID
+FROM Books_Authors AS Books_Authors_0;
+
+CREATE VIEW Z_Books AS SELECT
+  Books_0.ID,
+  Books_0.title
+FROM bookshop_Books AS Books_0;
+
+CREATE VIEW Z_Authors AS SELECT
+  Authors_0.ID,
+  Authors_0.name
+FROM bookshop_Authors AS Authors_0;
+```
+
+SERVER: There is no discernible difference in the log output from the CAP server. 
+
+But what we can now see at <http://localhost:4004> is that there's now a new, third service endpoint: <http://localhost:4004/z/LinkEntity>. The OData entityset resource at this endpoint is currently empty, as we can see from the JSON representation that is returned (we'll add data in the next step):
+
+```json
+{
+  "@odata.context": "$metadata#LinkEntity",
+  "value": []
+}
+```
+
+Not only that, but now that the relationships are back in the EDMX, we can follow the relationships from books to authors, and vice versa, by using the OData system query option `$expand` as normal:
+
+* For looking at authors of books with <http://localhost:8000/z/Books?$expand=authors>, we get:
+  ```json
+  {
+    "@odata.context": "$metadata#Books(authors())",
+    "value": [
+      {
+        "ID": 201,
+        "title": "Wuthering Heights",
+        "authors": []
+      },
+      {
+        "ID": 207,
+        "title": "Jane Eyre",
+        "authors": []
+      },
+      {
+        "ID": 251,
+        "title": "The Raven",
+        "authors": []
+      },
+      {
+        "ID": 252,
+        "title": "Eleonora",
+        "authors": []
+      },
+      {
+        "ID": 271,
+        "title": "Catweazle",
+        "authors": []
+      }
+    ]
+  }
+  ```
+
+* For looking at books of authors with <http://localhost:8000/z/Authors?$expand=books>, we get:
+  ```json
+  {
+    "@odata.context": "$metadata#Authors(books())",
+    "value": [
+      {
+        "ID": 101,
+        "name": "Emily Brontë",
+        "books": []
+      },
+      {
+        "ID": 107,
+        "name": "Charlotte Brontë",
+        "books": []
+      },
+      {
+        "ID": 150,
+        "name": "Edgar Allen Poe",
+        "books": []
+      },
+      {
+        "ID": 170,
+        "name": "Richard Carpenter",
+        "books": []
+      }
+    ]
+  }
+  ```
+
+There's no data in these followed navigation properties, because we removed the only link between the two entities when we removed the `author_ID` field from the data in the previous step. But notice, before we continue, that the value of the navigation property `authors` is an array. Not a scalar, like it was when we had `author_ID`, i.e. before we went from just a one-to-many relationship between authors and books to where we are now, where we have a many-to-many relationship. And it's a similar situation for the `books` navigation property in the records of the `Authors` entityset too.
+
+## 16 Add data to the link entity to relate books and authors
+
+Branch: `16-add-data-to-the-link-entity-to-relate-books-and-authors`.
 
 The `Books_Authors` link entity is represented at the persistence layer with a simple table which we know is defined like this:
 
@@ -1564,80 +1801,74 @@ We can now traverse one level of relationships, to find the books that authors w
 }
 ```
 
-Note that there is no author name information shown, we just get author ID information. That's because the author name is one step further on. Right now, we can see this query and result as jumping half way across a stream to a stone in the middle, which represents the link entity. To get to the other side, we need to take a second jump.
+Note that there is no author name information shown, we just get author ID information. That's because the author name is one step further on. Right now, we can see this query and result as like jumping half way across a stream to a stepping stone in the middle, which represents the link entity. To get to the other side, we need to take a second jump.
 
-We can use the power of OData V4 to make the second jump so that we effectively cover both steps in one go, from `Books` to `Books_Authors` to `Authors`, like this: [http://localhost:4004/z/Authors?$expand=books($expand=book)](http://localhost:4004/z/Books?$expand=authors($expand=author)), which will emit:
+We can use the power of OData V4 to make the second jump so that we effectively cover both steps in one go, from `Authors` to `Books_Authors` to `Books`, like this: [http://localhost:4004/z/Authors?$expand=books($expand=book)](http://localhost:8000/z/Authors?$expand=books($expand=book)), which will emit:
 
 ```json
 {
-  "@odata.context": "$metadata#Books(authors(author()))",
+  "@odata.context": "$metadata#Authors(books(book()))",
   "value": [
     {
-      "ID": 201,
-      "title": "Wuthering Heights",
-      "authors": [
+      "ID": 101,
+      "name": "Emily Brontë",
+      "books": [
         {
           "book_ID": 201,
           "author_ID": 101,
-          "author": {
-            "ID": 101,
-            "name": "Emily Brontë"
+          "book": {
+            "ID": 201,
+            "title": "Wuthering Heights"
           }
         }
       ]
     },
     {
-      "ID": 207,
-      "title": "Jane Eyre",
-      "authors": [
+      "ID": 107,
+      "name": "Charlotte Brontë",
+      "books": [
         {
           "book_ID": 207,
           "author_ID": 107,
-          "author": {
-            "ID": 107,
-            "name": "Charlotte Brontë"
+          "book": {
+            "ID": 207,
+            "title": "Jane Eyre"
           }
         }
       ]
     },
     {
-      "ID": 251,
-      "title": "The Raven",
-      "authors": [
+      "ID": 150,
+      "name": "Edgar Allen Poe",
+      "books": [
         {
           "book_ID": 251,
           "author_ID": 150,
-          "author": {
-            "ID": 150,
-            "name": "Edgar Allen Poe"
+          "book": {
+            "ID": 251,
+            "title": "The Raven"
           }
-        }
-      ]
-    },
-    {
-      "ID": 252,
-      "title": "Eleonora",
-      "authors": [
+        },
         {
           "book_ID": 252,
           "author_ID": 150,
-          "author": {
-            "ID": 150,
-            "name": "Edgar Allen Poe"
+          "book": {
+            "ID": 252,
+            "title": "Eleonora"
           }
         }
       ]
     },
     {
-      "ID": 271,
-      "title": "Catweazle",
-      "authors": [
+      "ID": 170,
+      "name": "Richard Carpenter",
+      "books": [
         {
           "book_ID": 271,
           "author_ID": 170,
-          "author": {
-            "ID": 170,
-            "name": "Richard Carpenter"
+          "book": {
+            "ID": 271,
+            "title": "Catweazle"
           }
         }
       ]
@@ -1646,7 +1877,9 @@ We can use the power of OData V4 to make the second jump so that we effectively 
 }
 ```
 
-## 16 Add a further author and book relationship to define co-authorship
+## 17 Add a further author and book relationship to define co-authorship
+
+Branch: `17-add-a-further-author-and-book-relationship-to-define-co-authorship`.
 
 As a final test, let's create a fictional collaboration between Ellis Bell and Emily Brontë. Ellis Bell was the pseudonym under which Emily Brontë wrote Wuthering Heights, so it sort of makes sense. Or maybe it doesn't. Anyway. 
 
@@ -1723,4 +1956,4 @@ And now check that Wuthering Heights is now recorded as being co-written by both
 }
 ```
 
-Excellent!
+We now have a fully functioning many-to-many relationship set up between our books and our authors, built with a pair of (one-) to-many managed associations linked together with a link entity. Great work!
