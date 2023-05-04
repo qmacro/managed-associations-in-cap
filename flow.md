@@ -588,7 +588,7 @@ ID,title,author_ID
 271,Catweazle,170
 ```
 
-Add it to the `db/data/bookshop-Books.csv` file:
+Redirect this to the `db/data/bookshop-Books.csv` file:
 
 ```shell
 csvgetdata Books ID,title,author_ID > db/data/bookshop-Books.csv
@@ -602,7 +602,7 @@ EDMX: No change.
 
 SQL: No change.
 
-SERVER: Restarts, and now the `Books` entityset's records have values in the `author_ID` field:
+SERVER: Restarts, and now the `Books` entityset's records (at <http://localhost:4004/z/Books>) have values in the `author_ID` field:
 
 ```json
 {
