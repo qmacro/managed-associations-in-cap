@@ -10,6 +10,7 @@ You can take this journey with whatever tools, IDEs, editors and command lines y
 
 Here are the steps. In most of them, there's a "Notes" section that covers what happens to the EDMX, SQL and in the CAP server output when we perform the step activities.
 
+1. [Set up a new empty CAP project](#set-up-a-new-empty-cap-project)
 1. [Set up the monitoring](#set-up-the-monitoring)
 1. [Start with the basic persistence layer artifacts](#start-with-the-basic-persistence-layer-artifacts)
 1. [Add an empty service](#add-an-empty-service)
@@ -26,6 +27,18 @@ Here are the steps. In most of them, there's a "Notes" section that covers what 
 1. [Relate each of the Books and Authors entities to the new link entity](#relate-each-of-the-books-and-authors-entities-to-the-new-link-entity)
 1. [Add data to the link entity to relate books and authors](#add-data-to-the-link-entity-to-relate-books-and-authors)
 1. [Add a further author and book relationship to define co-authorship](#add-a-further-author-and-book-relationship-to-define-co-authorship)
+
+## Set up a new empty CAP project
+
+We'll be starting from scratch with a new, empty CAP project. You'll need the CDS Development Kit installed.
+
+Do this now, and (if you don't have any preferred editor or IDE) open it in VS Code:
+
+```shell
+cds init associations && code associations
+```
+
+This should start up VS Code and open within it the `associations/` directory that was just created by the `cds init` command.
 
 ## Set up the monitoring 
 
