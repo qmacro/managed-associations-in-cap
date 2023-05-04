@@ -112,9 +112,9 @@ Each of these will produce output as soon as we invoke them, and will continue t
 
 ### Notes
 
-EDMX: Error "There are no service definitions found at all in given model(s).".
+EDMX: The error "There are no service definitions found at all in given model(s)" is emitted. While we have entity definitions, they are not yet exposed in any service. In fact, no service has been defined at all yet.
 
-SQL: Basic DDL for creating TABLE artifacts only (no views), and there are just the basic fields:
+SQL: Basic DDL for creating TABLE artifacts only (no views) appears, and there are just the basic fields:
 
 ```sql
 CREATE TABLE bookshop_Books (
@@ -130,13 +130,21 @@ CREATE TABLE bookshop_Authors (
 );
 ```
 
-SERVER: Message "No service definitions found in loaded models. Waiting for some to arrive...".
+SERVER: Data is loaded successfully from the CSV files:
+
+```log
+[cds] - connect to db > sqlite { database: ':memory:' }
+ > init from db/data/bookshop-Authors.csv
+ > init from db/data/bookshop-Books.csv
+/> successfully deployed to sqlite in-memory db
+```
+
+But there is a message "No service definitions found in loaded models. Waiting for some to arrive...". Again, this makes sense, as we've not defined any services yet.
+
 
 ## Add an empty service
 
-Add `service Z;` (capital `Z`) to `srv/main.cds` so that it becomes:
-
-**`srv/main.cds`**
+👉 Add `service Z;` (capital `Z`) to `srv/main.cds` so that it becomes:
 
 ```cds
 using bookshop from '../db/schema';
@@ -169,7 +177,7 @@ Within the main `Schema` section, the `EntityContainer` contains nothing, and th
 
 SQL: No change.
 
-SERVER: Started. Serves capital `Z` as lower case `z`. In browser, shows service and metadata document links, but there are no service endpoints. Metadata document as EDMX above. Service document has no real content:
+SERVER: Started. Serves capital `Z` as lower case `z`. In browser at <http://localhost:4004> service and metadata document links are shown, but there are no service endpoints. The metadata document appears as the EDMX above. The service document has no real content; the important part (the list of entitysets available, in the `value` property) is empty:
 
 ```json
 {
@@ -181,9 +189,7 @@ SERVER: Started. Serves capital `Z` as lower case `z`. In browser, shows service
 
 ## Add the Books entity but not inside the service
 
-Add an entity specification in `srv/main.cds` but not inside the `service` statement.
-
-**`srv/main.cds`**
+👉 Add an entity specification in `srv/main.cds`, but not inside the `service` statement. The content of this file should now look like this:
 
 ```cds
 using bookshop from '../db/schema';
