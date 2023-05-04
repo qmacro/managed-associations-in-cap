@@ -882,7 +882,7 @@ CREATE VIEW Z_Authors AS SELECT
 FROM bookshop_Authors AS Authors_0;
 ```
 
-SERVER: The `Authors` entityset records at <http://localhost:z/Authors> now show that new `books_ID` element, and the value for each one is `null`:
+SERVER: The `Authors` entityset records at <http://localhost:4004/z/Authors> now show that new `books_ID` element, and the value for each one is `null`:
 
 ```json
 {
