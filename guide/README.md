@@ -1465,10 +1465,15 @@ It should show a list of current CSV fields in the file, like this:
 ID,title,author_ID
 ```
 
-👉 Now re-run it, this time specifying the `author_ID` field that we want to delete (WARNING: this will actually modify the CSV file contents directly, as well as displaying the new content):
+👉 Now re-run it, this time specifying the `author_ID` field that we want to delete. WARNING: this will actually modify the CSV file contents directly:
 
 ```shell
 csvdelfield db/data/bookshop-Books.csv author_ID
+```
+
+As well as modifying the CSV file, it will also output the new content directly:
+
+```csv
 ID,title
 201,Wuthering Heights
 207,Jane Eyre
