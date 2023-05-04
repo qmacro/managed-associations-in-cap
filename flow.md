@@ -575,7 +575,7 @@ This suggests we need to add a new field to the `db/data/bookshop-Books.csv` fil
 
 ## Add the author_ID field to the Books CSV data
 
-👉 Use the script `./utils/csvgetdata` to retrieve the Books CSV (from the CSV data files in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo) like this:
+👉 Open up yet another terminal pane, and use the script `./utils/csvgetdata` to retrieve the Books CSV (from the CSV data files in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo) like this:
 
 ```shell
 ./utils/csvgetdata Books ID,title,author_ID
@@ -599,6 +599,8 @@ ID,title,author_ID
 ```
 
 Now we have the values for `author_ID` in the Books data.
+
+> You can close this terminal pane again, or leave it around as you'll be running another script later on.
 
 ### Notes
 
@@ -1222,9 +1224,9 @@ So everything seems to work as intended, a (one-) to-one managed association fro
 
 ## Create a link entity as the basis for a many-to-many relationship
 
-While CDS doesn't currently directly support many-to-many relationships (see [Many-to-Many Association](https://cap.cloud.sap/docs/guides/domain-models#many-to-many-associations)), they can be achieved by using a so-called "link entity" to bind two (one) to-many managed associations together.
+While CDS doesn't currently directly support many-to-many relationships (see [Many-to-Many Associations](https://cap.cloud.sap/docs/guides/domain-models#many-to-many-associations)), they can be achieved by using a so-called "link entity" to bind two (one) to-many managed associations together.
 
-In the `srv/extend.cds` file, add a new entity `Books_Authors` so that the contents look as follows:
+👉 In the `srv/extend.cds` file, add a new entity `Books_Authors` so that the contents look as follows:
 
 ```cds
 using bookshop from '../db/schema';
@@ -1260,18 +1262,18 @@ SERVER: No change.
 
 ## Relate each of the Books and Authors entities to the new link entity
 
-Think of the link entity as a central "plumbing" facility, that just has a list of (in this case) pairs of numeric author and book IDs, linking authors and books. Then, from either side, we need to links the Books entity and Authors entity to that central plumbing facility, i.e. the link entity.
+Think of the link entity as a central "plumbing" facility, that just has a list of (in this case) pairs of numeric author and book IDs, linking authors and books. Then, from either side, we need to links the `Books` entity and `Authors` entity to that central plumbing facility, i.e. the link entity.
 
-Right now, the relationships defined in `srv/extend.cds`, going from `bookshop.Books` and going from `bookshop.Authors`, go to each other, i.e. these are the two managed association definitions (see just earlier for the entire contents):
+Right now, the relationships defined in `srv/extend.cds`, going from `bookshop.Books` and going from `bookshop.Authors`, go to each other. In other words, these are the two managed association definitions (see just earlier for the entire contents):
 
-* The current (one-) to-one managed association:
+* Here's the current (one-) to-one managed association:
   ```cds
   extend bookshop.Books with {
     author: Association to bookshop.Authors;
   }
   ```
 
-* And the current (one-) to-many managed association:
+* And here's the current (one-) to-many managed association:
   ```cds
   extend bookshop.Authors with {
     books: Association to many bookshop.Books on books.author = $self;
@@ -1312,7 +1314,7 @@ EDMX: A warning is emitted thus:
 [WARNING] srv/main.cds:5:10: No OData navigation property generated, target “Books_Authors” is outside of service “Z” (in entity:“Z.Authors”/element:“books”)
 ```
 
-The message is clear, although it's best to read this one from back to front. In other words, because `Books_Authors` is not included in the `Z` service definition, which is true (we haven't added anything inside the `service Z { ... }` to include it yet) ... a navigation property binding at the OData level cannot be generated (because there isn't anywhere for it to point - there is no target entity type for this link entity, and consequently no entityset either as a target for the navigation).
+The message is fairly clear, although it's best to read this one from back to front to properly understand it. What it's saying is that because `Books_Authors` is not included in the `Z` service definition -- which is true, we haven't added anything inside the `service Z { ... }` to include it yet -- a navigation property binding at the OData level cannot be generated (because there isn't anywhere for it to point - there is no target entity type for this link entity, and consequently no entityset either as a target for the navigation).
 
 As a result of this omission, all relationships (in the form of navigation properties) have disappeared, and we're back to almost where we started (with just simple properties for the book IDs and titles, and the author IDs and names):
 
@@ -1395,20 +1397,22 @@ SERVER: We see an error emitted:
 INSERT INTO bookshop_Books ( ID, title, author_ID ) VALUES ( ?, ?, ? )
 ```
 
-This makes sense, as there is no longer any `author_ID`. So let's get rid of that from the CSV file `db/data/bookshop-Books.csv`. And that's not wasted effort that we'll have to shortly undo, because when we do want to rebuild that relationship (between books and authors), we won't be doing it in the `db/data/bookshop-Books.csv` file, we'll be doing it in the CSV file that corresponds to the link entity.
+This makes sense, as there is no longer any `author_ID`. So let's get rid of that from the CSV file `db/data/bookshop-Books.csv`. And that's not wasted effort that we'll have to shortly undo, because when we do want to rebuild that relationship (between books and authors), we won't be doing it in the `db/data/bookshop-Books.csv` file, we'll be doing it in a new CSV file that will correspond to the link entity.
 
-Use the utility `csvdelfield` in the `utils/` directory to do this. First, try it out, specifying the name of the CSV file, like this:
+To get rid of the `author_ID` field from the CSV file, you can use the `csvdelfield` script in the `utils/` directory. This is perhaps a little overkill for a CSV file with only a handful of records, but it could be useful for larger files, or files where you want to remove a field that is in the middle and difficult to edit out manually.
+
+👉 At a terminal prompt (for example the one you used earlier for the `./utils/csvgetdata` script), try it out, specifying the name of the CSV file, like this:
 
 ```shell
-csvdelfield db/data/bookshop-Books.csv
+./utils/csvdelfield db/data/bookshop-Books.csv
 ```
-It should show a list of current fields, like this:
+It should show a list of current CSV fields in the file, like this:
 
 ```log
 ID,title,author_ID
 ```
 
-Now re-run it, this time specifying the `author_ID` field that we want to delete (warning: this will actually modify the CSV file contents directly, as well as displaying the new content:
+👉 Now re-run it, this time specifying the `author_ID` field that we want to delete (WARNING: this will actually modify the CSV file contents directly, as well as displaying the new content):
 
 ```shell
 csvdelfield db/data/bookshop-Books.csv author_ID
@@ -1442,9 +1446,16 @@ CREATE TABLE Books_Authors (
 
 So we can now relate books and authors by defining pairs of IDs in a new file `db/data/Books_Authors.csv`. The name follows the usual convention, even though it looks a little different to the names of the other CSV files here; it is the namespace and entity name, but as there's no namespace that contextualises the entity here, there's no `<namespace>-` prefix part in the filename. 
 
-Let's start by restoring the relationships we had before, where Charlotte Brontë wrote Wuthering Heights, Emily Brontë wrote Jane Eyre, Richard Carpenter wrote Catweazle, and Edgar Allen Poe, wrote Eleonora and also The Raven (a poem, as it happens).
+> Remember that the entity is defined (`entity Books_Authors { ... }`) in the `srv/extend.cds` file where there's no `namespace` declaration.
 
-In `db/data/Books_Authors.csv`, add the following:
+Let's start by restoring the relationships we had before, where: 
+
+* Charlotte Brontë wrote Wuthering Heights
+* Emily Brontë wrote Jane Eyre
+* Richard Carpenter wrote Catweazle
+* Edgar Allen Poe wrote Eleonora and also wrote The Raven (a poem, as it happens)
+
+👉 Create the new file `db/data/Books_Authors.csv` and add the following to it:
 
 ```csv
 book_ID,author_ID
