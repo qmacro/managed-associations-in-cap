@@ -5,5 +5,5 @@ extend bookshop.Books with {
 }
 
 extend bookshop.Authors with {
-  books: Association to many bookshop.Books;
+  books: Association to many bookshop.Books on books.author = $self;
 }
