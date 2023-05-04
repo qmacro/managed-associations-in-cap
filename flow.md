@@ -1,16 +1,29 @@
-# Flow
+# Understanding and exploring managed associations in CAP
+
+This series of steps will take us on a journey exploring managed associations in the SAP Cloud Application Programming Model, where we go from a simple one-to-one managed association and ultimately end up at the stage where we've created a many-to-many relationship between two entities using a pair of to-many managed associations and a link entity to join them together.
+
+The journey is based on [the simplest thing that could possibly work](http://c2.com/xp/DoTheSimplestThingThatCouldPossiblyWork.html): two classic entities Books and Authors, with the minimum number of elements. The data is classic too, taken from the bookshop sample and containing a handful of publications and authors. The journey starts with the two entities independent of each other, and the relationships are built up from there. Throughout, we monitor the generation of two key components - the OData metadata (in EDMX) and the SQL DDL statements that are generated for the persistence layer. We also monitor the output of the CAP server, which we run in "watch" mode. For everything we monitor, we examine any warnings or errors as they occur too, as well as make sure we understand what changes, and why.
+
+The journey leads you on a path that ends up with a simple OData V4 service providing Books and Authors data, ultimately one that allows for books to have multiple authors, and authors to have written multiple books. But the important part of the journey is not that destination, it's the path we will take.
+
+You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. There are some simple monitoring scripts in this repo (in the [utils/](./utils) directory) to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer.
+
+1. [#monitoring-setup](Monitoring setup)
+1. [#starting-point](Starting point)
 
 ## Monitoring setup
 
-Run the following in separate terminal panes:
+Run the following in separate terminals (in VS Code you can use the ["split panes" facility in the integrated terminal](https://code.visualstudio.com/docs/terminal/basics#_groups-split-panes) for this):
 
 * `./util/monedmx` ("EDMX")
 * `./util/monsql` ("SQL")
 * `cds watch` ("SERVER")
 
+Each of these will produce output as soon as you invoke them, and will continue to monitor for changes and re-produce output as appropriate.
+
 ## Starting point
 
-Start with just `Books` and `Authors` defined as entities in `db/schema.cds`, with no relationships between them. Basic CSV data. No services defined.
+This is the starting point. Let's begin with just `Books` and `Authors` defined as entities in `db/schema.cds`, with no relationships between them. Some basic CSV data is all that we need. Note that at this point, no services are defined.
 
 **`db/schema.cds`**
 
