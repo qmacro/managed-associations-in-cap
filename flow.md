@@ -6,13 +6,16 @@ The journey is based on [the simplest thing that could possibly work](http://c2.
 
 The journey leads us on a path that ends up with a simple OData V4 service providing Books and Authors data, ultimately one that allows for books to have multiple authors, and authors to have written multiple books. But the important part of the journey is not that destination, it's the path we will take.
 
-You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. There are some simple monitoring scripts in this repo (in the [utils/](./utils) directory) to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer.
+You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. 
+
+> The instructions here will assume you're using Microsoft VS Code and that you have that set up already along with the SAP Cloud Application Programming Model development kit (Node.js) installed. It also assumes you have enough familiarity with VS Code to be able to create and edit files and run commands in the integrated terminal.
+
+There are some simple monitoring scripts in this repo (in the [utils/](./utils) directory) to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer.
 
 Here are the steps. In most of them, there's a "Notes" section that covers what happens to the EDMX, SQL and in the CAP server output when we perform the step activities.
 
-1. [Set up a new empty CAP project](#set-up-a-new-empty-cap-project)
-1. [Set up the monitoring](#set-up-the-monitoring)
-1. [Start with the basic persistence layer artifacts](#start-with-the-basic-persistence-layer-artifacts)
+1. [Clone this repo and set up a new empty CAP project](#clone-this-repo-and-set-up-a-new-empty-cap-project)
+1. [Start with the basic persistence layer artifacts and set up the monitoring](#start-with-the-basic-persistence-layer-artifacts-and-set-up-monitoring)
 1. [Add an empty service](#add-an-empty-service)
 1. [Add the Books entity but not inside the service](#add-the-books-entity-but-not-inside-the-service)
 1. [Put the Books entity inside the service](#put-the-books-entity-inside-the-service)
@@ -28,35 +31,34 @@ Here are the steps. In most of them, there's a "Notes" section that covers what 
 1. [Add data to the link entity to relate books and authors](#add-data-to-the-link-entity-to-relate-books-and-authors)
 1. [Add a further author and book relationship to define co-authorship](#add-a-further-author-and-book-relationship-to-define-co-authorship)
 
-## Set up a new empty CAP project
+## Clone this repo and set up a new empty CAP project
 
-We'll be starting from scratch with a new, empty CAP project. You'll need the CDS Development Kit installed.
+We'll be starting from scratch with a new, empty CAP project, within the context of this repo (as the simple monitoring scripts you'll use are in here). 
 
-Do this now, and (if you don't have any preferred editor or IDE) open it in VS Code:
+👉 Clone this repo now, and open it in VS Code:
 
 ```shell
-cds init associations && code associations
+git clone https://github.com/qmacro/managed-associations-in-cap
+code managed-associations-in-cap
 ```
 
-This should start up VS Code and open within it the `associations/` directory that was just created by the `cds init` command.
+This should start up VS Code and open within it the new `managed-associations-in-cap/` directory containing a clone of this repo.
 
-## Set up the monitoring 
+👉 In VS Code, open a new terminal and initialise a new CAP project directly in the directory you're now in:
 
-Run the following in separate terminals (in VS Code you can use the ["split panes" facility in the integrated terminal](https://code.visualstudio.com/docs/terminal/basics#_groups-split-panes) for this):
+```shell
+cds init
+```
 
-* `./util/monedmx` ("EDMX")
-* `./util/monsql` ("SQL")
-* `cds watch` ("SERVER")
+This should create various files and directories.
 
-Each of these will produce output as soon as we invoke them, and will continue to monitor for changes and re-produce output as appropriate.
-
-## Start with the basic persistence layer artifacts
+## Start with the basic persistence layer artifacts and set up monitoring
 
 This is where we start the journey. Let's begin with just `Books` and `Authors` defined as entities in `db/schema.cds`, with no relationships between them. Some basic CSV data is all that we need. Note that at this point, no services are defined.
 
 👉 Prepare the following files and content.
 
-In `db/schema.cds`:
+Create `db/schema.cds` with this content:
 
 ```cds
 namespace bookshop;
@@ -71,13 +73,13 @@ entity Authors {
 }
 ```
 
-In `srv/main.cds`:
+Create `srv/main.cds` with this content:
 
 ```cds
 using bookshop from '../db/schema';
 ```
 
-In `db/data/bookshop-Books.csv`:
+Create `db/data/bookshop-Books.csv` with this content:
 
 ```csv
 ID,title
@@ -88,7 +90,7 @@ ID,title
 271,Catweazle
 ```
 
-In `db/data/bookshop-Authors.csv`:
+Create `db/data/bookshop-Authors.csv` with this content:
 
 ```csv
 ID,name
@@ -97,6 +99,16 @@ ID,name
 150,Edgar Allen Poe
 170,Richard Carpenter
 ```
+
+Now it's time to set up the monitoring.
+
+👉 Run each of the following in separate terminals (in VS Code you can use the ["split panes" facility in the integrated terminal](https://code.visualstudio.com/docs/terminal/basics#_groups-split-panes) for this):
+
+* `./util/monedmx` ("EDMX")
+* `./util/monsql` ("SQL")
+* `cds watch` ("SERVER")
+
+Each of these will produce output as soon as we invoke them, and will continue to monitor for changes and re-produce output as appropriate.
 
 ### Notes
 
