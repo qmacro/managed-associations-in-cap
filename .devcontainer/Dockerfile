@@ -14,5 +14,5 @@ RUN curl -fsSLO "https://github.com/sharkdp/bat/releases/download/v$BATVER/bat-m
   && dpkg -i "./bat-musl_${BATVER}_amd64.deb" \
   && rm "./bat-musl_${BATVER}_amd64.deb"
 
-# Install SAP CAP SDK globally
-RUN su node -c "npm install -g @sap/cds-dk"
+# Install SAP CAP SDK globally at 6.5.0
+RUN su node -c "npm install -g @sap/cds-dk@6.5.0"
