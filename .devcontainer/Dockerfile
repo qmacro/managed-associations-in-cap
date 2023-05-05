@@ -8,5 +8,11 @@ FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends curl git jq miller entr
 
+# Install bat - cat with wings
+ARG BATVER=0.22.1
+RUN curl -fsSLO "https://github.com/sharkdp/bat/releases/download/v$BATVER/bat-musl_${BATVER}_amd64.deb" \
+  && dpkg -i "./bat-musl_${BATVER}_amd64.deb" \
+  && rm "./bat-musl_${BATVER}_amd64.deb"
+
 # Install SAP CAP SDK globally
 RUN su node -c "npm install -g @sap/cds-dk"
