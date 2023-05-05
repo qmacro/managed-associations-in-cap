@@ -10,14 +10,17 @@ The journey leads us on a path that ends up with a simple OData V4 service provi
 
 You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. 
 
-> The instructions here will assume you're using Microsoft VS Code and that you have that set up already along with the SAP Cloud Application Programming Model development kit (Node.js) installed. 
+If you're looking for a "turnkey" setup, then we recommend you use Microsoft VS Code which can then benefit from the dev container definition, which describes a container image containing everything you need, from the command line tools (and the ultimate shell environment itself, i.e. Bash, naturally), Node.js, and the Node.js-based SAP Cloud Application Programming Model development kit "@sap/cds-dk". 
+
+The instructions here will assume you're using this approach, i.e. using VS Code and that you also have a container runtime (such as Docker Desktop) for VS Code to use.
+
+> If your editor haas an Auto Save facility (VS Code does), you should turn it off, mostly so you can make changes and decide when you want to observe the effects, and specifically because you'll need to make a coordinated change to a couple of files, and it's better if you make all the changes first and save them together afterwards.
 >
-> It also assumes you have enough familiarity with VS Code to be able to create and edit files and run commands in the integrated terminal. It requires basic command line tools plus the command line CSV utility [miller](https://miller.readthedocs.io/en/latest/).
+> Here's what the setting looks like in VS Code:
 >
-> If you are using VS Code, you should turn OFF the Auto Save facility, mostly so you can make changes and decide when you want to observe the effects, and specifically because you'll need to make a coordinated change to a couple of files, and it's better if you make all the changes first and save them together afterwards.
 > ![autosave off](assets/autosave-off.png)
 
-There are some simple monitoring scripts in this repo, in the [utils/](./utils/) directory, to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer. Also in the [utils/](./utils/) directory are a couple of simple CSV related scripts that we'll use; these both use `miller`.
+There are some simple monitoring scripts in this repo, in the [utils/](./utils/) directory, to monitor for changes to files and to emit (and re-emit everytime anything changes) the EDMX (the OData metadata for the service) and the SQL DDL statements for the tables and views at the persistence layer. Also in the [utils/](./utils/) directory are a couple of simple CSV related scripts that we'll use.
 
 Here are the steps. In most of the steps the observations that we make (on the EDMX, SQL and CAP server output) will be in a "Notes" subsection within that step.
 
@@ -52,9 +55,9 @@ git clone https://github.com/qmacro/managed-associations-in-cap
 code managed-associations-in-cap
 ```
 
-This should start up VS Code and open within it the new `managed-associations-in-cap/` directory containing a clone of this repo.
+This should start up VS Code and open within it the new `managed-associations-in-cap/` directory containing a clone of this repo. Additionally, VS Code should notice the `.devcontainer/` directory and contents, and prompt you to re-open in a container. You should do this. 
 
-👉 In VS Code, open a new terminal and initialise a new CAP project directly in the directory you're now in:
+👉 Once VS Code has re-opened things in the context of the defined container, open a new terminal and initialise a new CAP project directly in the directory you're now in:
 
 ```shell
 cds init
