@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 
 # Install extra tools for CAP development & deployment.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends curl git jq miller entr
+    && apt-get -y install --no-install-recommends curl jq miller entr
 
 # Install bat - cat with wings
 ARG BATVER=0.22.1
