@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 
 # Install extra tools for CAP development & deployment.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends curl git jq miller
+    && apt-get -y install --no-install-recommends curl git jq miller entr
 
 # Install SAP CAP SDK globally
 RUN su node -c "npm install -g @sap/cds-dk"
