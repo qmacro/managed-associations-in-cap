@@ -14,7 +14,7 @@ If you're looking for a "turnkey" setup, then we recommend you use Microsoft VS 
 
 The instructions here will assume you're using this approach, i.e. using VS Code and that you also have a container runtime (such as Docker Desktop) for VS Code to use.
 
-> If your editor haas an Auto Save facility (VS Code does), you should turn it off, mostly so you can make changes and decide when you want to observe the effects, and specifically because you'll need to make a coordinated change to a couple of files, and it's better if you make all the changes first and save them together afterwards.
+> If your editor has an Auto Save facility (VS Code does), you should turn it off, mostly so you can make changes and decide when you want to observe the effects, and specifically because you'll need to make a coordinated change to a couple of files, and it's better if you make all the changes first and save them together afterwards.
 >
 > Here's what the setting looks like in VS Code:
 >
@@ -394,7 +394,7 @@ EDMX: A further `EntityType` and `EntitySet` pair appears, but note that there a
 </edmx:Edmx>
 ```
 
-SQL: There's now a second CREATE VIEW DDL statement for the Authors entity in the service, also of course with the name prefixed with the service name, i.e. `Z_Authors`:
+SQL: There's now a second CREATE VIEW DDL statement for the Authors entity in the service, also of course with the entity's name prefixed with the service name, i.e. `Z_Authors`:
 
 ```sql
 CREATE TABLE bookshop_Books (
@@ -563,7 +563,7 @@ FROM bookshop_Authors AS Authors_0;
 
 This `author_ID` element is created automatically by CAP; this is a small part of what managed associations are all about, abstracting the underlying persistence layer and doing the "foreign key thinking" for you.
 
-SERVER: Nothing visibly changes at the service endpoint level, but the records (entities) in the `Books` entityset (<http://localhost:4004/z/Books>) now contain the new `author_ID` field. Don't get too excited yet, because right now they're all `null` of course:
+SERVER: Nothing visibly changes at the service endpoint level, but the records (entities) in the `Books` entityset (<http://localhost:4004/z/Books>) now contain the new `author_ID` field. Don't get too excited yet, because right now the values are all `null` of course:
 
 ```json
 {
@@ -637,7 +637,7 @@ EDMX: No change.
 
 SQL: No change.
 
-SERVER: Restarts, and now the `Books` entityset's records (at <http://localhost:4004/z/Books>) have values in the `author_ID` field:
+SERVER: The CAP server restarts, and now the `Books` entityset's records (at <http://localhost:4004/z/Books>) have values in the `author_ID` field:
 
 ```json
 {
@@ -674,7 +674,7 @@ SERVER: Restarts, and now the `Books` entityset's records (at <http://localhost:
 
 This is enough to satisfy and support the basic relationship we have now between `Books` and `Authors`, which in turn means we can use OData's `$expand` system query option when requesting the `Books` entityset, to follow the `author` navigation property, i.e. <http://localhost:4004/z/Books?$expand=author>. 
 
-The resulting resource (as usual, with OData V4, in a JSON representation), is where we can see the (one-) to-one relationship and where -- right now -- a book has one author and only one author:
+The resulting resource (as usual, with OData V4, in a JSON representation), is where we can see the (one-) to-one relationship and where -- right now -- a book can have one and only one author:
 
 ```json
 {
@@ -741,6 +741,38 @@ The resulting resource (as usual, with OData V4, in a JSON representation), is w
 </EntityType>
 ```
 
+> You may have noticed that the value of the author ID appeared twice in the JSON response, once as the value of the `author_ID` foreign key field created and handled by the managed association, and again as the value of the `ID` key field of the expanded entity. Here's an example where the author ID value `101` appears twice:
+> 
+> ```json
+> {
+>   "ID": 201,
+>   "title": "Wuthering Heights",
+>   "author_ID": 101,
+>   "author": {
+>     "ID": 101,
+>     "name": "Emily Brontë"
+>   }
+> }
+> ```
+>
+> Key fields are automatically emitted in the entities, but we can indirectly omit the `author_ID` field from the `Books` entity by adding a `$select` query option like this: <http://localhost:4004/z/Books?$expand=author&$select=title&$top=1> (just selecting the first entity to keep things short):
+>
+> ```json
+> {
+>   "@odata.context": "$metadata#Books(title,ID,author())",
+>   "value": [
+>     {
+>       "title": "Wuthering Heights",
+>       "ID": 201,
+>       "author": {
+>         "ID": 101,
+>         "name": "Emily Brontë"
+>       }
+>     }
+>   ]
+> }
+> ```
+
 ## 09 Move the current to-one managed association from the persistence layer to the service layer
 
 Branch: `09-move-the-current-to-one-managed-association-from-the-persistence-layer-to-the-service-layer`.
@@ -751,7 +783,7 @@ Rather than continue to work at the `db/schema.cds` level, let's move our relati
 
 👉 Next, restart the two monitoring scripts `./utils/monedmx` and `./utils/monsql`. This is because they are based on [entr](https://eradman.com/entrproject/) which monitors changes to files, but not creation of new files, so the creation and subsequent editing of the new `srv/extend.cds` here wouldn't cause the EDMX and SQL output to be refreshed.
 
-👉 Once you've restarted the EDMX and SQL monitors, carry out the following changes, and make them both before you save the files (it's easier to observe the effects this way):
+👉 Once you've restarted the EDMX and SQL monitors, carry out the following changes:
 
 * Remove the `author` element from the `Books` entity in `db/schema.cds`, so the entity definition goes back to looking like this:
   ```cds
@@ -772,7 +804,7 @@ Rather than continue to work at the `db/schema.cds` level, let's move our relati
 
   > Note that the association target must now be specified with the namespace prefix, as `bookshop.Authors`, and not just `Authors`.
 
-👉 Save the changes to both files once you've made both of these changes.
+👉 Save the changes to both files, ideally at the same time.
 
 
 ### Notes
@@ -791,9 +823,11 @@ SERVER: When the empty file `srv/extend.cds` is first created, the server restar
   srv/main.cds
 ```
 
-There is no effective difference to the service, or the data available. We've just moved the definition of the (one-) to-one managed association to a separate file at the service layer, nothing more.
+Beyond this minor change to the CAP server log output, there is no effective difference to the service, or the data available. We've just moved the definition of the (one-) to-one managed association to a separate file at the service layer, nothing more. 
 
-Incidentally, if you didn't manage to save both files at the same time, that's fine, it's just that you will have encountered one of two possible errors (both temporary) in the CAP server log output, depending on which file you saved first:
+> If you want to learn more about how to integrate and mash up services and definitions, you may wish to attend (or host) the [Service integration with SAP Cloud Application Programming Model](https://github.com/SAP-samples/cap-service-integration-codejam) SAP CodeJam - find out more at [So, You Want to Host a CodeJam! Everything you need to know](https://groups.community.sap.com/t5/sap-codejam-blog-posts/so-you-want-to-host-a-codejam-everything-you-need-to-know/ba-p/221415).
+
+Incidentally, if you didn't manage to save both files at the same time, that's fine, it's just that you will have encountered one of two possible errors (both temporary) in the CAP server log output, depending on which file you saved first. Then again, errors are great, because we learn from them, so let's embrace them! Here are the possible errors you may have encountered:
 
 * If you saved the removal of the `author:  Association to Authors;` line in the `db/schema.cds` file first, you may have seen the following error, because you'd removed the managed association, which had been responsible for the creation of the `author_ID` element (to act as a foreign key), and which would have therefore been removed, causing a CSV import error thus:
   ```log
@@ -810,7 +844,7 @@ Incidentally, if you didn't manage to save both files at the same time, that's f
 
 Branch: `10-add-a-reverse-to-many-managed-association-from-authors-to-books`.
 
-So we can go from an author to the book(s) they wrote, we need to add a reverse association. Again, a managed association, but this time not a to-one but a a to-many managed association.
+So far we can go from a book to the author of that book. So that we can also go from an author to the book(s) they wrote, we need to add a reverse association. Again, a managed association, but this time not a to-one but a a to-many managed association.
 
 👉 In the `srv/extend.cds` file, add another `extend` stanza so the entire contents look like this (do not specify any `on` condition at this point):
 
@@ -828,7 +862,7 @@ extend bookshop.Authors with {
 
 ### Notes
 
-> If you don't see the warnings described as follows, simply restart the `./utils/monedmx` and `./utils/monsql` scripts.
+> If you don't see the warnings described as follows, simply restart the `./utils/monedmx` and `./utils/monsql` scripts as described in the previous step.
 
 EDMX: There are warnings when generating the EDMX, as follows:
 
@@ -884,7 +918,7 @@ In the list of `EntityType`s, there are some additions in the the `Authors` `Ent
 
 First, the `Authors` `EntityType` now has a `NavigationProperty`, about which there are two things to notice:
 
-* The type is specified as `Collection(Z.Books)`, because it's for this to-many association
+* The type is specified as `Collection(Z.Books)`, because it's for this to-many association (i.e. the relationship is from a single thing to a collection of things)
 * While there is a `ReferentialConstraint` defined for the already-existing to-one association from earlier (for `Books.author`):
     ```xml
     <NavigationProperty Name="author" Type="Z.Authors">
@@ -893,7 +927,13 @@ First, the `Authors` `EntityType` now has a `NavigationProperty`, about which th
     ```
   there is no `ReferentialConstraint` for this new to-many association.
 
-Second, there is also an additional `Property` for the `books_ID` element that was created as a result of this new managed to-many association.
+Second, there is also an additional `Property` for the `books_ID` element that was created as a result of this new managed to-many association:
+
+```xml
+<Property Name="books_ID" Type="Edm.Int32"/>
+```
+
+Does this look right to you? Hold that thought.
 
 SQL: The same warnings appear as did for the EDMX (and for the same reason, of course):
 
@@ -902,7 +942,7 @@ SQL: The same warnings appear as did for the EDMX (and for the same reason, of c
 [WARNING] srv/main.cds:5:10: An association can't have cardinality "to many" without an ON-condition (in entity:“Z.Authors”/element:“books”)
 ```
 
-The resulting SQL reflects the addition of this to-many managed association, via the new `books_ID` element in the DDL for the `bookshop_Authors` table, and the new `Authors_0.books_ID` element in the DDL for the `Z_Authors` view:
+The DDL statements in the SQL now also have a new element `books_ID` both in the `CREATE_TABLE` statement for the `bookshop_Authors` table and for the `Z_Authors` view too:
 
 ```sql
 CREATE TABLE bookshop_Books (
@@ -931,6 +971,8 @@ CREATE VIEW Z_Authors AS SELECT
   Authors_0.books_ID
 FROM bookshop_Authors AS Authors_0;
 ```
+
+Again, how do you think this additional `books_ID` element might work to bring about a (one-) to-many association from authors to books? 
 
 SERVER: The `Authors` entityset records at <http://localhost:4004/z/Authors> now show that new `books_ID` element, and the value for each one is `null`:
 
@@ -962,7 +1004,7 @@ SERVER: The `Authors` entityset records at <http://localhost:4004/z/Authors> now
 }
 ```
 
-> Important: As it stands, this to-many managed association isn't quite right. Given that there's only a single scalar value that can be specified for `books_ID`, how on earth could we relate an author to more than one book?
+Basically, as it stands, this to-many managed association isn't quite right. Given that there's only a single scalar value that can be specified for `books_ID`, how on earth could we relate an author to more than one book?
 
 ## 11 Fix the to-many managed association
 
