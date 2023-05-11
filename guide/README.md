@@ -1043,8 +1043,7 @@ EDMX: The warnings have now gone. There are no further changes to the details of
 
 However, both the `Books` and `Authors` `EntityType`s have changed. 
 
-The `Books` `EntityType` (the target of this (one-) to-many managed association) now has, in its existing `NavigationProperty`, a new attribute `Partner="books"`:
-
+The `Books` `EntityType`, i.e. the target of this (one-) to-many managed association, now has a new attribute `Partner="books"` in its existing `NavigationProperty`:
 
 ```xml
 <EntityType Name="Books">
@@ -1081,7 +1080,7 @@ But more crucially, this property:
 
 has now disappeared again. This makes sense, in that it absolutely didn't make sense to have a `book_ID` property to link an author to potentially multiple books. 
 
-SQL: Correspondingly, the `book_ID` element has now disappeared again from both the table and the view DDL statements:
+SQL: Correspondingly, the `book_ID` element has now disappeared again from both the authors table and view DDL statements:
 
 ```sql
 CREATE TABLE bookshop_Books (
@@ -1168,7 +1167,7 @@ Note that there is no field in this authors data that explicitly points to book 
 }
 ```
 
-This reflects exactly the fields and data within the `db/data/bookshop-Authors.csv` file. No `book_ID` any more.
+This reflects exactly the fields and data within the `db/data/bookshop-Authors.csv` file. There's no `book_ID` any more.
 
 👉 Now use the `$expand` system query option to follow the navigation property (this one: `<NavigationProperty Name="books" Type="Collection(Z.Books)" Partner="author"/>`) <http://localhost:4004/z/Authors?$expand=books> - this should return something like this:
 
@@ -1320,6 +1319,8 @@ So everything seems to work as intended, a (one-) to-one managed association fro
 
 Branch: `13-create-a-link-entity-as-the-basis-for-a-many-to-many-relationship`.
 
+Let's now move on from (one-) to-one and (one-) to-many relationships ... to a many-to-many relationship.
+
 While CDS doesn't currently directly support many-to-many relationships (see [Many-to-Many Associations](https://cap.cloud.sap/docs/guides/domain-models#many-to-many-associations)), they can be achieved by using a so-called "link entity" to bind two (one) to-many managed associations together.
 
 👉 In the `srv/extend.cds` file, add a new entity `Books_Authors` so that the contents look as follows:
@@ -1360,7 +1361,7 @@ SERVER: No change.
 
 Branch: `14-relate-each-of-the-books-and-authors-entities-to-the-new-link-entity`.
 
-Think of the link entity as a central "plumbing" facility, that just has a list of (in this case) pairs of numeric author and book IDs, linking authors and books. Then, from either side, we need to links the `Books` entity and `Authors` entity to that central plumbing facility, i.e. the link entity.
+Think of the link entity as a central "plumbing" facility, that just has a list of (in this case) pairs of numeric author and book IDs, linking authors and books. Then, from either side, we need to link the `Books` entity and `Authors` entity to that central plumbing facility, i.e. the link entity.
 
 Right now, the relationships defined in `srv/extend.cds`, going from `bookshop.Books` and going from `bookshop.Authors`, go to each other. In other words, these are the two managed association definitions (see just earlier for the entire contents):
 
@@ -1378,9 +1379,9 @@ Right now, the relationships defined in `srv/extend.cds`, going from `bookshop.B
   }
   ```
 
-Now we need to change those to point to the corresponding elements in the new link entity `Books_Authors`. 
+Now we need to make a change so that they no longer point to each other, but instead point to the corresponding elements in the new link entity `Books_Authors`. 
 
-Modify the `srv/extend.cds` so the entire contents look like this (note that each of the element names are plural now):
+👉 Modify the `srv/extend.cds` so the entire contents look like this (note that each of the element names are plural now):
 
 ```cds
 using bookshop from '../db/schema';
@@ -1412,9 +1413,11 @@ EDMX: A warning is emitted thus:
 [WARNING] srv/main.cds:5:10: No OData navigation property generated, target “Books_Authors” is outside of service “Z” (in entity:“Z.Authors”/element:“books”)
 ```
 
-The message is fairly clear, although it's best to read this one from back to front to properly understand it. What it's saying is that because `Books_Authors` is not included in the `Z` service definition -- which is true, we haven't added anything inside the `service Z { ... }` to include it yet -- a navigation property binding at the OData level cannot be generated (because there isn't anywhere for it to point - there is no target entity type for this link entity, and consequently no entityset either as a target for the navigation).
+The message is fairly clear, although it's best to read this one from back to front to properly understand it. 
 
-As a result of this omission, all relationships (in the form of navigation properties) have disappeared, and we're back to almost where we started (with just simple properties for the book IDs and titles, and the author IDs and names):
+What it's saying is that because `Books_Authors` is not included in the `Z` service definition (which is true, we haven't added anything inside the `service Z { ... }` to include it yet) a navigation property binding at the OData level cannot be generated. This is because there isn't anywhere for it to point - there is no target entity type for this link entity, and consequently no entityset either as a target for the navigation.
+
+As a result of this omission, all relationships (in the form of navigation properties) have disappeared, and we're back to almost where we started, with just simple properties for the book IDs and titles, and the author IDs and names:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -1495,7 +1498,9 @@ SERVER: We see an error emitted:
 INSERT INTO bookshop_Books ( ID, title, author_ID ) VALUES ( ?, ?, ? )
 ```
 
-This makes sense, as there is no longer any `author_ID`. So let's get rid of that from the CSV file `db/data/bookshop-Books.csv`. And that's not wasted effort that we'll have to shortly undo, because when we do want to rebuild that relationship (between books and authors), we won't be doing it in the `db/data/bookshop-Books.csv` file, we'll be doing it in a new CSV file that will correspond to the link entity.
+This makes sense, as there is no longer any `author_ID`. So before moving on to the next step, let's get rid of that from the CSV file `db/data/bookshop-Books.csv`. 
+
+And that's not wasted effort that we'll have to shortly undo, because when we do want to rebuild that relationship (between books and authors), we won't be doing it in the `db/data/bookshop-Books.csv` file, we'll be doing it in a new CSV file that will correspond to the link entity.
 
 To get rid of the `author_ID` field from the CSV file, you can use the `csvdelfield` script in the `utils/` directory. This is perhaps a little overkill for a CSV file with only a handful of records, but it could be useful for larger files, or files where you want to remove a field that is in the middle and difficult to edit out manually.
 
@@ -1551,11 +1556,18 @@ service Z {
 }
 ```
 
-But with our `srv/extend.cds` file, we're already thinking philosophically about treading lightly upon entity and service definitions that already exist, and instead extending and modifying them from elsewhere. In this file, we've already used the `extend` keyword to add elements to existing entities (adding `authors` to `bookshop.Books`, and `books` to `bookshop.Authors`). So let's continue on that path and add a further `extend` keyword, but this time for our `Z` service.
+But with our `srv/extend.cds` file, we're already thinking philosophically about treading lightly upon entity and service definitions that already exist, and instead extending and modifying them from elsewhere. 
+
+In this file, we've already used the `extend` keyword to add elements to existing entities (adding `authors` to `bookshop.Books`, and `books` to `bookshop.Authors`). So let's continue on that path and add a further `extend` keyword, but this time not for an entity, but for a service. Our `Z` service.
 
 In order to successfully reference that `Z` service, which is defined in `srv/main.cds`, we need to bring the definition in.
 
-👉 So add a `using` line and an `extend service` clause to `srv/extend.cds`, so that the contents end up looking like this:
+👉 So, in `srv/extend.cds`: 
+
+* add a `using` line to bring in the definitions in `srv/main.cds`
+* add an `extend service` clause to add the link entity to the `Z` service
+
+The contents should end up looking like this:
 
 ```cds
 using bookshop from '../db/schema';
@@ -1589,9 +1601,9 @@ EDMX: The warnings about no navigation properties being generated now have disap
 [WARNING] srv/extend.cds:18:10: Expected entity to have a primary key (in entity:“Z.LinkEntity”)
 ```
 
-This is fine, we're not wanting to use this link entity as a "normal" entity, so we can safely ignore this warning.
+This is fine, we're not wanting to use this link entity as a "normal" entity, so we can ignore this warning.
 
-More interestingly, relationships are back in the EDMX, and back with a vengeance!
+More interestingly, relationships are back in the EDMX, and they're back with a vengeance!
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -1647,9 +1659,11 @@ More interestingly, relationships are back in the EDMX, and back with a vengeanc
 </edmx:Edmx>
 ```
 
-Here's a few pointers that will help you [stare at](https://qmacro.org/blog/posts/2017/02/19/the-beauty-of-recursion-and-list-machinery/#initialrecognition) the XML. Taking the `EntityType`s first:
+Here's a few pointers that will help you [stare at](https://qmacro.org/blog/posts/2017/02/19/the-beauty-of-recursion-and-list-machinery/#initialrecognition) the XML and take it all in.
 
-* There's now a new `EntityType` for the `LinkEntity`. This consists purely of a couple of `NavigationProperty` elements each paired with a sibling `Property` for the `_ID` style field generated through the managed association definition.
+Taking the `EntityType`s first:
+
+* There's now a new `EntityType` for the `LinkEntity`. This consists purely of a couple of `NavigationProperty` elements each paired with a sibling `Property` element for the `_ID` style field generated through the managed association definition.
 * Each of the `Books` and `Authors` `EntityTypes` now has a `NavigationProperty` that points to the `LinkEntity`, specifically in a collection (i.e. a to-many) context.
 
 Now looking at the content of the `EntityContainer`:
@@ -1692,9 +1706,7 @@ CREATE VIEW Z_Authors AS SELECT
 FROM bookshop_Authors AS Authors_0;
 ```
 
-SERVER: There is no discernible difference in the log output from the CAP server. 
-
-But what we can now see at <http://localhost:4004> is that there's now a new, third service endpoint: <http://localhost:4004/z/LinkEntity>. The OData entityset resource at this endpoint is currently empty, as we can see from the JSON representation that is returned (we'll add data in the next step):
+SERVER: There is no discernible difference in the log output from the CAP server. But what we can see at <http://localhost:4004> is that there's now a new, third service endpoint: <http://localhost:4004/z/LinkEntity>. The OData entityset resource at this endpoint is currently empty, as we can see from the JSON representation that is returned (we'll add data in the next step):
 
 ```json
 {
@@ -1785,9 +1797,9 @@ CREATE TABLE Books_Authors (
 );
 ```
 
-So we can now relate books and authors by defining pairs of IDs in a new file `db/data/Books_Authors.csv`. The name follows the usual convention, even though it looks a little different to the names of the other CSV files here; it is the namespace and entity name, but as there's no namespace that contextualises the entity here, there's no `<namespace>-` prefix part in the filename. 
+So we can now relate books and authors by defining pairs of IDs in a new CSV file `db/data/Books_Authors.csv`. The name follows the usual convention, even though it looks a little different to the names of the other CSV files here; it is the namespace and entity name, but as there's no namespace that contextualises the entity here, there's no `<namespace>-` prefix part in the filename. 
 
-> Remember that the entity is defined (`entity Books_Authors { ... }`) in the `srv/extend.cds` file where there's no `namespace` declaration.
+> Remember that the entity (`entity Books_Authors { ... }`) is defined in the `srv/extend.cds` file where there's no `namespace` declaration.
 
 Let's start by restoring the relationships we had before, where: 
 
@@ -1982,7 +1994,7 @@ book_ID,author_ID
 201,102
 ```
 
-Now check that both Emily Brontë and Ellis Bell appear as authors, with [http://localhost:4004/z/Authors?$search=Ellis OR Emily](http://localhost:4004/z/Authors?$search=Ellis%20OR%20Emily) for example:
+👉 Now check that both Emily Brontë and Ellis Bell appear as authors, with [http://localhost:4004/z/Authors?$search=Ellis OR Emily](http://localhost:4004/z/Authors?$search=Ellis%20OR%20Emily) for example:
 
 ```json
 {
@@ -2000,7 +2012,7 @@ Now check that both Emily Brontë and Ellis Bell appear as authors, with [http:/
 }
 ```
 
-And now check that Wuthering Heights is now recorded as being co-written by both authors, with [http://localhost:4004/z/Books?$filter=title%20eq%20%27Wuthering%20Heights%27&$expand=authors($expand=author)](http://localhost:4004/z/Books?$filter=title%20eq%20%27Wuthering%20Heights%27&$expand=authors($expand=author)):
+👉 And now check that Wuthering Heights is now recorded as being co-written by both authors, with [http://localhost:4004/z/Books?$filter=title eq 'Wuthering Heights'&$expand=authors($expand=author)](http://localhost:4004/z/Books?$filter=title%20eq%20%27Wuthering%20Heights%27&$expand=authors($expand=author)):
 
 ```json
 {
@@ -2032,4 +2044,6 @@ And now check that Wuthering Heights is now recorded as being co-written by both
 }
 ```
 
-We now have a fully functioning many-to-many relationship set up between our books and our authors, built with a pair of (one-) to-many managed associations linked together with a link entity. Great work!
+We now have a fully functioning many-to-many relationship set up between our books and our authors, built with a pair of (one-) to-many managed associations linked together with a link entity. 
+
+Great work!
