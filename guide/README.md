@@ -190,11 +190,11 @@ EDMX: We now have a very basic (and empty) OData service (note the namespace is 
 </edmx:Edmx>
 ```
 
-Within the main `Schema` section, the `EntityContainer` contains nothing, and there are no `EntityType`s. 
+Within the main `Schema` section, there is an empty `EntityContainer`, and there are no `EntityType`s. 
 
 SQL: No change.
 
-SERVER: The message about no service definitions being found goes away and we see that it is serving service `Z` as lower case `z` (this is a CAP convention which can be overridden). At <http://localhost:4004> links to the standard OData service document and metadata document are shown, but there are no service endpoints. The metadata document (<http://localhost:4004/$metadata>) appears as the EDMX above. The service document (<http://localhost:4004/z>) has no real content; the important part (the list of entitysets available, in the `value` property) is empty: 
+SERVER: The message about no service definitions being found goes away and we see that it is serving service `Z` as lower case `z` (this is a CAP convention which can be overridden). At <http://localhost:4004> links to the standard OData service document and metadata document are shown, but there are no service endpoints. The metadata document content (at <http://localhost:4004/z/$metadata>) is the same as the EDMX above. The service document (<http://localhost:4004/z>) has no real content; the important part (the list of entitysets available, in the `value` property) is empty: 
 
 ```json
 {
@@ -222,7 +222,7 @@ entity Books as projection on bookshop.Books;
 
 EDMX: This remains unchanged, as a basic and still empty service. Not surprisingly, as the entity we've just added wasn't within the context of the `Z` service (or any service).
 
-SQL: A `CREATE VIEW` DDL stanza appears but note that the entity is not prefixed with any service name, i.e. `CREATE VIEW Books`, not `CREATE VIEW z_Books`:
+SQL: A `CREATE VIEW` DDL stanza appears. Note that the name for the entity is not prefixed with any service name, i.e. it is `CREATE VIEW Books` and not `CREATE VIEW Z_Books`:
 
 ```sql
 CREATE TABLE bookshop_Books (
@@ -245,7 +245,7 @@ FROM bookshop_Books AS Books_0;
 
 Views are most commonly used to represent the entity projections in a service. So from a persistence layer perspective, things are ready for this entity projection.
 
-SERVER: There's no sign of `Books` as a service endpoint at <http://localhost:4004/> (as it's not actually defined within the `Z` service, i.e. for the same reason why it's not showing in the EDMX either).
+SERVER: There's no difference in the CAP server log output. Moreover, there's no sign of `Books` as a service endpoint at <http://localhost:4004/> (as it's not actually defined within the `Z` service, i.e. for the same reason why it's not showing in the EDMX either).
 
 ## 05 Put the Books entity inside the service
 
@@ -263,7 +263,7 @@ service Z {
 
 ### Notes
 
-EDMX: Now the `Books` entity appears as an `EntityType` definition within the `Schema`, and there's an `EntitySet` defined that refers to that `EntityType`.
+EDMX: Now the `Books` entity appears as an `EntityType` definition within the `Schema`, and the `EntityContainer` is no longer empty - it now contains an `EntitySet` defined that refers to that `EntityType`.
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -312,7 +312,7 @@ CREATE VIEW Z_Books AS SELECT
 FROM bookshop_Books AS Books_0;
 ```
 
-SERVER: There's now a `Books` service endpoint shown at <http://localhost:4004>, and selecting it (to make an OData query operation on the entityset, i.e. <http://localhost:4004/z/Books>) returns the data sourced from the CSV file, with ID and title values:
+SERVER: There's still no difference in the CAP server log output (there wouldn't be, for a simple addition of an endpoint in a service). But at <http://localhost:4004> there's now a `Books` service endpoint shown. Selecting it (to make an OData query operation on the entityset, i.e. <http://localhost:4004/z/Books>) returns the data sourced from the CSV file, with ID and title values:
 
 ```json
 {
