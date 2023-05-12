@@ -882,7 +882,7 @@ EDMX: There are warnings when generating the EDMX, as follows:
 [WARNING] srv/main.cds:5:10: An association can't have cardinality "to many" without an ON-condition (in entity:“Z.Authors”/element:“books”)
 ```
 
-See the [(One-)To-Many Associations](https://cap.cloud.sap/docs/guides/domain-modeling#one--to-many-associations) section of Capire for details. Both warnings relate to the same issue (the `Association to many bookshop.Books`), just from two different perspectives: 
+See the [(One-)To-Many Associations](https://cap.cloud.sap/docs/guides/domain-modeling#to-many-associations) section of Capire for details. Both warnings relate to the same issue (the `Association to many bookshop.Books`), just from two different perspectives: 
 
 * in the `srv/extend.cds` file
 * in the `srv/main.cds` file
