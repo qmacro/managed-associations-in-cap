@@ -882,7 +882,7 @@ EDMX: There are warnings when generating the EDMX, as follows:
 [WARNING] srv/main.cds:5:10: An association can't have cardinality "to many" without an ON-condition (in entity:“Z.Authors”/element:“books”)
 ```
 
-See the [(One-)To-Many Associations](https://cap.cloud.sap/docs/guides/domain-models#one--to-many-associations) section of Capire for details. Both warnings relate to the same issue (the `Association to many bookshop.Books`), just from two different perspectives: 
+See the [(One-)To-Many Associations](https://cap.cloud.sap/docs/guides/domain-modeling#one--to-many-associations) section of Capire for details. Both warnings relate to the same issue (the `Association to many bookshop.Books`), just from two different perspectives: 
 
 * in the `srv/extend.cds` file
 * in the `srv/main.cds` file
@@ -1332,7 +1332,7 @@ Branch: `13-create-a-link-entity-as-the-basis-for-a-many-to-many-relationship`.
 
 Let's now move on from (one-) to-one and (one-) to-many relationships ... to a many-to-many relationship.
 
-While CDS doesn't currently directly support many-to-many relationships (see [Many-to-Many Associations](https://cap.cloud.sap/docs/guides/domain-models#many-to-many-associations)), they can be achieved by using a so-called "link entity" to bind two (one) to-many managed associations together.
+While CDS doesn't currently directly support many-to-many relationships (see [Many-to-Many Associations](https://cap.cloud.sap/docs/guides/domain-modeling#many-to-many-associations)), they can be achieved by using a so-called "link entity" to bind two (one) to-many managed associations together.
 
 👉 In the `srv/extend.cds` file, add a new entity `Books_Authors` so that the contents look as follows:
 
