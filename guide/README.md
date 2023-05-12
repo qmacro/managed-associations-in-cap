@@ -30,7 +30,7 @@ Here are the steps. In most of the steps the observations that we make (on the E
 * [04 Add the Books entity but not inside the service](#04-add-the-books-entity-but-not-inside-the-service)
 * [05 Put the Books entity inside the service](#05-put-the-books-entity-inside-the-service)
 * [06 Add the Authors entity inside the service](#06-add-the-authors-entity-inside-the-service)
-* [07 Add a basic relationship with a to-one managed association, at the persistence layer](#07-add-a-basic-relationship-with-a-to-one-managed-association,-at-the-persistence-layer)
+* [07 Add a basic relationship with a to-one managed association, at the persistence layer](#07-add-a-basic-relationship-with-a-to-one-managed-association-at-the-persistence-layer)
 * [08 Add the author_ID field to the Books CSV data](#08-add-the-author_id-field-to-the-books-csv-data)
 * [09 Move the current to-one managed association from the persistence layer to the service layer](#09-move-the-current-to-one-managed-association-from-the-persistence-layer-to-the-service-layer)
 * [10 Add a reverse to-many managed association from Authors to Books](#10-add-a-reverse-to-many-managed-association-from-authors-to-books)
