@@ -729,7 +729,7 @@ The resulting resource (as usual, with OData V4, in a JSON representation), is w
 }
 ```
 
-> Important: There is no change to the `Authors` entityset, and we cannot go the other way, i.e. we can not go from author to book. There is no navigation property available for that, as we can of course see from the definition of the `Authors` `EntityType` in the metadata document at <http://localhost:4004/z/$metadata>:
+Important: There is no change to the `Authors` entityset, and we cannot go the other way, i.e. we can not go from author to book. There is no navigation property available for that, as we can of course see from the definition of the `Authors` `EntityType` in the metadata document at <http://localhost:4004/z/$metadata>:
 
 ```xml
 <EntityType Name="Authors">
@@ -740,6 +740,17 @@ The resulting resource (as usual, with OData V4, in a JSON representation), is w
   <Property Name="name" Type="Edm.String"/>
 </EntityType>
 ```
+
+In fact, if we were to attempt to invent or guess at such a property and use it, in a call such as <http://localhost:4004/z/Authors?$expand=book> or <http://localhost:4004/z/Authors?$expand=books> then we'd get an error, of course:
+
+```xml
+<error xmlns="http://docs.oasis-open.org/odata/ns/metadata">
+  <code>400</code>
+  <message>Navigation property 'books' is not defined in type 'Z.Authors'</message>
+</error>
+```
+
+But even this error teaches us something, or at least suggests something that is quite likely: that `$expand` needs a `NavigationProperty` to work. Errors are our friends!
 
 > You may have noticed that the value of the author ID appeared twice in the JSON response, once as the value of the `author_ID` foreign key field created and handled by the managed association, and again as the value of the `ID` key field of the expanded entity. Here's an example where the author ID value `101` appears twice:
 > 
