@@ -1120,6 +1120,12 @@ b.ID = a.author_ID
 
 This is pretty much what we'd expect, i.e. the constraint in action. We don't have a constraint in the `ON (...)` part of the SQL expression generated for <http://localhost:4004/z/Authors?$expand=books> because the managed association declaration is incomplete.
 
+👉 Before continuing, restart the CAP server again, this time without the `DEBUG=sql`, i.e. back to normal:
+
+```shell
+cds watch
+```
+
 ## 11 Fix the to-many managed association
 
 Branch: `11-fix-the-to-many-managed-association`.
@@ -1516,7 +1522,7 @@ entity Books_Authors {
 }
 ```
 
-> It's at this point worth mentioning the way I remember how the `on` conditions are specified, as the examples here are clean and clear to use in an explanation. In the first example here (`authors: Association to many Books_Authors on authors.book = $self`) the left hand side of the condition, `authors.book` is constructed from the name of the element we're defining (`authors`), and the name of the element in the target entity (i.e. `book`), that is `authors.book`. Similarly for `books.author` in the second example.
+> It's at this point worth mentioning the way I remember how the `on` conditions are specified, as the examples here are clean and clear to use in an explanation. In the first example here (`authors: Association to many Books_Authors on authors.book = $self`) the left hand side of the condition, `authors.book` is constructed from the name of the element we're defining (`authors`), and the name of the element in the target entity that describes the reverse relationship (i.e. `book`), making `authors.book`. Similarly for `books.author` in the second example.
 
 This modification causes quite a bit of a change, including warnings!
 
