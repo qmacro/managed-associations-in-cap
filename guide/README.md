@@ -2,15 +2,15 @@
 
 This series of steps will take us on a journey exploring managed associations in the SAP Cloud Application Programming Model, where we go from a simple one-to-one managed association and ultimately end up at the stage where we've created a many-to-many relationship between two entities using a pair of (one-) to-many managed associations and a link entity to join them together.
 
-The journey is based on [the simplest thing that could possibly work](http://c2.com/xp/DoTheSimplestThingThatCouldPossiblyWork.html): two classic entities books and authors, with the minimum number of elements. The data is classic too, taken from the bookshop sample in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo, and contains just a handful of publications and authors. The journey starts with the two entities independent of each other, and the relationships are built up from there. 
+The journey is based on [the simplest thing that could possibly work](http://c2.com/xp/DoTheSimplestThingThatCouldPossiblyWork.html): two classic entities books and authors, with the minimum number of elements. The data is classic too, taken from the bookshop sample in the [SAP-samples/cloud-cap-samples](https://github.com/SAP-samples/cloud-cap-samples/) repo, and contains just a handful of publications and authors. The journey starts with the two entities independent of each other, and the relationships are built up from there.
 
 Throughout, we monitor the generation of two key components - the OData metadata (in EDMX) and the SQL DDL statements that are generated for the persistence layer. We also monitor the output of the CAP server, which we run in "watch" mode. For everything we monitor, we examine any warnings or errors as they occur too, as well as make sure we understand what changes take place, and why.
 
 The journey leads us on a path that ends up with a simple OData V4 service providing books and authors data, ultimately one that allows for books to have multiple authors, and authors to have written multiple books. But the important part of the journey is not that destination, it's the path we will take.
 
-You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with. 
+You can take this journey with whatever tools, IDEs, editors and command lines you feel comfortable with.
 
-If you're looking for a "turnkey" setup, then we recommend you use Microsoft VS Code which can then benefit from the dev container definition, which describes a container image containing everything you need, from the command line tools (and the ultimate shell environment itself, i.e. Bash, naturally), Node.js, and the Node.js-based SAP Cloud Application Programming Model development kit "@sap/cds-dk". 
+If you're looking for a "turnkey" setup, then we recommend you use Microsoft VS Code which can then benefit from the dev container definition, which describes a container image containing everything you need, from the command line tools (and the ultimate shell environment itself, i.e. Bash, naturally), Node.js, and the Node.js-based SAP Cloud Application Programming Model development kit "@sap/cds-dk".
 
 The instructions here will assume you're using this approach, i.e. using VS Code and that you also have a container runtime (such as Docker Desktop) for VS Code to use.
 
@@ -46,7 +46,7 @@ Here are the steps. In most of the steps the observations that we make (on the E
 
 Branch: `01-clone-this-repo-and-set-up-a-new-empty-cap-project`.
 
-We'll be starting from scratch with a new, empty CAP project, within the context of this repo (as the simple monitoring scripts you'll use are in here). 
+We'll be starting from scratch with a new, empty CAP project, within the context of this repo (as the simple monitoring scripts you'll use are in here).
 
 👉 Clone this repo now, and open it in VS Code:
 
@@ -55,7 +55,7 @@ git clone https://github.com/qmacro/managed-associations-in-cap
 code managed-associations-in-cap
 ```
 
-This should start up VS Code and open within it the new `managed-associations-in-cap/` directory containing a clone of this repo. Additionally, VS Code should notice the `.devcontainer/` directory and contents, and prompt you to re-open in a container. You should do this. 
+This should start up VS Code and open within it the new `managed-associations-in-cap/` directory containing a clone of this repo. Additionally, VS Code should notice the `.devcontainer/` directory and contents, and prompt you to re-open in a container. You should do this.
 
 👉 Once VS Code has re-opened things in the context of the defined container, open a new terminal and initialise a new CAP project directly in the directory you're now in:
 
@@ -190,11 +190,11 @@ EDMX: We now have a very basic (and empty) OData service (note the namespace is 
 </edmx:Edmx>
 ```
 
-Within the main `Schema` section, there is an empty `EntityContainer`, and there are no `EntityType`s. 
+Within the main `Schema` section, there is an empty `EntityContainer`, and there are no `EntityType`s.
 
 SQL: No change.
 
-SERVER: The message about no service definitions being found goes away and we see that it is serving service `Z` as lower case `z` (this is a CAP convention which can be overridden). At <http://localhost:4004> links to the standard OData service document and metadata document are shown, but there are no service endpoints. The metadata document content (at <http://localhost:4004/z/$metadata>) is the same as the EDMX above. The service document (<http://localhost:4004/z>) has no real content; the important part (the list of entitysets available, in the `value` property) is empty: 
+SERVER: The message about no service definitions being found goes away and we see that it is serving service `Z` as lower case `z` (this is a CAP convention which can be overridden). At <http://localhost:4004> links to the standard OData service document and metadata document are shown, but there are no service endpoints. The metadata document content (at <http://localhost:4004/z/$metadata>) is the same as the EDMX above. The service document (<http://localhost:4004/z>) has no real content; the important part (the list of entitysets available, in the `value` property) is empty:
 
 ```json
 {
@@ -487,7 +487,7 @@ entity Authors {
 
 ### Notes
 
-EDMX: Suddenly we can see relationships expressed in the OData entity data model. A `NavigationPropertyBinding` element appears within the `EntitySet` for `Books`, pointing to the `EntitySet` for `Authors`. 
+EDMX: Suddenly we can see relationships expressed in the OData entity data model. A `NavigationPropertyBinding` element appears within the `EntitySet` for `Books`, pointing to the `EntitySet` for `Authors`.
 
 Additionally, the `Books` `EntityType` gets a new `Property` which is `author_ID`, and also gets a `NavigationProperty` which has a `ReferentialConstraint` based on that property. Note that there's no change to the `Authors` `EntityType` definition at this point:
 
@@ -672,7 +672,7 @@ SERVER: The CAP server restarts, and now the `Books` entityset's records (at <ht
 }
 ```
 
-This is enough to satisfy and support the basic relationship we have now between `Books` and `Authors`, which in turn means we can use OData's `$expand` system query option when requesting the `Books` entityset, to follow the `author` navigation property, i.e. <http://localhost:4004/z/Books?$expand=author>. 
+This is enough to satisfy and support the basic relationship we have now between `Books` and `Authors`, which in turn means we can use OData's `$expand` system query option when requesting the `Books` entityset, to follow the `author` navigation property, i.e. <http://localhost:4004/z/Books?$expand=author>.
 
 The resulting resource (as usual, with OData V4, in a JSON representation), is where we can see the (one-) to-one relationship and where -- right now -- a book can have one and only one author:
 
@@ -753,7 +753,7 @@ In fact, if we were to attempt to invent or guess at such a property and use it,
 But even this error teaches us something, or at least suggests something that is quite likely: that `$expand` needs a `NavigationProperty` to work. Errors are our friends!
 
 > You may have noticed that the value of the author ID appeared twice in the JSON response, once as the value of the `author_ID` foreign key field created and handled by the managed association, and again as the value of the `ID` key field of the expanded entity. Here's an example where the author ID value `101` appears twice:
-> 
+>
 > ```json
 > {
 >   "ID": 201,
@@ -788,9 +788,9 @@ But even this error teaches us something, or at least suggests something that is
 
 Branch: `09-move-the-current-to-one-managed-association-from-the-persistence-layer-to-the-service-layer`.
 
-Rather than continue to work at the `db/schema.cds` level, let's move our relationship enhancements up a layer, to the service layer, and store them in an "extension" file. 
+Rather than continue to work at the `db/schema.cds` level, let's move our relationship enhancements up a layer, to the service layer, and store them in an "extension" file.
 
-👉 First, create a new, empty file `srv/extend.cds`. 
+👉 First, create a new, empty file `srv/extend.cds`.
 
 👉 Next, restart the two monitoring scripts `./utils/monedmx` and `./utils/monsql`. This is because they are based on [entr](https://eradman.com/entrproject/) which monitors changes to files, but not creation of new files, so the creation and subsequent editing of the new `srv/extend.cds` here wouldn't cause the EDMX and SQL output to be refreshed.
 
@@ -834,7 +834,7 @@ SERVER: When the empty file `srv/extend.cds` is first created, the server restar
   srv/main.cds
 ```
 
-Beyond this minor change to the CAP server log output, there is no effective difference to the service, or the data available. We've just moved the definition of the (one-) to-one managed association to a separate file at the service layer, nothing more. 
+Beyond this minor change to the CAP server log output, there is no effective difference to the service, or the data available. We've just moved the definition of the (one-) to-one managed association to a separate file at the service layer, nothing more.
 
 > If you want to learn more about how to integrate and mash up services and definitions, you may wish to attend (or host) the [Service integration with SAP Cloud Application Programming Model](https://github.com/SAP-samples/cap-service-integration-codejam) SAP CodeJam - find out more at [So, You Want to Host a CodeJam! Everything you need to know](https://groups.community.sap.com/t5/sap-codejam-blog-posts/so-you-want-to-host-a-codejam-everything-you-need-to-know/ba-p/221415).
 
@@ -842,7 +842,7 @@ Incidentally, if you didn't manage to save both files at the same time, that's f
 
 * If you saved the removal of the `author:  Association to Authors;` line in the `db/schema.cds` file first, you may have seen the following error, because you'd removed the managed association, which had been responsible for the creation of the `author_ID` element (to act as a foreign key), and which would have therefore been removed, causing a CSV import error thus:
   ```log
-  [ERROR] SQLITE_ERROR: table bookshop_Books has no column named author_ID in: 
+  [ERROR] SQLITE_ERROR: table bookshop_Books has no column named author_ID in:
   INSERT INTO bookshop_Books ( ID, title, author_ID ) VALUES ( ?, ?, ? )
   ```
 
@@ -882,12 +882,12 @@ EDMX: There are warnings when generating the EDMX, as follows:
 [WARNING] srv/main.cds:5:10: An association can't have cardinality "to many" without an ON-condition (in entity:“Z.Authors”/element:“books”)
 ```
 
-See the [(One-)To-Many Associations](https://cap.cloud.sap/docs/guides/domain-modeling#to-many-associations) section of Capire for details. Both warnings relate to the same issue (the `Association to many bookshop.Books`), just from two different perspectives: 
+See the [(One-)To-Many Associations](https://cap.cloud.sap/docs/guides/domain-modeling#to-many-associations) section of Capire for details. Both warnings relate to the same issue (the `Association to many bookshop.Books`), just from two different perspectives:
 
 * in the `srv/extend.cds` file
 * in the `srv/main.cds` file
 
-Despite these warnings, there have, though, been some additions to the metadata. 
+Despite these warnings, there have, though, been some additions to the metadata.
 
 In the `EntityContainer` area, the `Authors` `EntitySet` now has a `NavigationPropertyBinding` pointing to the `Books` `EntitySet`. So instead of just:
 
@@ -983,7 +983,7 @@ CREATE VIEW Z_Authors AS SELECT
 FROM bookshop_Authors AS Authors_0;
 ```
 
-Again, how do you think this additional `books_ID` element might work to bring about a (one-) to-many association from authors to books? 
+Again, how do you think this additional `books_ID` element might work to bring about a (one-) to-many association from authors to books?
 
 SERVER: The `Authors` entityset records at <http://localhost:4004/z/Authors> now show that new `books_ID` element, and the value for each one is `null`:
 
@@ -1023,7 +1023,7 @@ While we can logically see that this is not going to work, let's find out what h
 <NavigationProperty Name="books" Type="Collection(Z.Books)"/>
 ```
 
-We know that to follow such properties we can use the OData system query option `$expand`. 
+We know that to follow such properties we can use the OData system query option `$expand`.
 
 👉 So try this: <http://localhost:4004/z/Authors?$expand=books>.
 
@@ -1055,40 +1055,40 @@ DEBUG=sql cds watch
 Immediately, in addition to all the normal log output, we also see this:
 
 ```log
-[sqlite] - BEGIN 
-[sqlite] - DROP table if exists cds_Model; 
-[sqlite] - COMMIT 
-[sqlite] - BEGIN 
+[sqlite] - BEGIN
+[sqlite] - DROP table if exists cds_Model;
+[sqlite] - COMMIT
+[sqlite] - BEGIN
 [sqlite] - SELECT 1 from sqlite_master where name='cds_xt_Extensions' {}
-[sqlite] - DROP VIEW IF EXISTS Z_Authors 
-[sqlite] - DROP VIEW IF EXISTS Z_Books 
-[sqlite] - DROP TABLE IF EXISTS bookshop_Authors 
-[sqlite] - DROP TABLE IF EXISTS bookshop_Books 
+[sqlite] - DROP VIEW IF EXISTS Z_Authors
+[sqlite] - DROP VIEW IF EXISTS Z_Books
+[sqlite] - DROP TABLE IF EXISTS bookshop_Authors
+[sqlite] - DROP TABLE IF EXISTS bookshop_Books
 [sqlite] - CREATE TABLE bookshop_Books (
   ID INTEGER NOT NULL,
   title NVARCHAR(5000),
   author_ID INTEGER,
   PRIMARY KEY(ID)
-); 
+);
 [sqlite] - CREATE TABLE bookshop_Authors (
   ID INTEGER NOT NULL,
   name NVARCHAR(5000),
   books_ID INTEGER,
   PRIMARY KEY(ID)
-); 
+);
 [sqlite] - CREATE VIEW Z_Books AS SELECT
   Books_0.ID,
   Books_0.title,
   Books_0.author_ID
-FROM bookshop_Books AS Books_0; 
+FROM bookshop_Books AS Books_0;
 [sqlite] - CREATE VIEW Z_Authors AS SELECT
   Authors_0.ID,
   Authors_0.name,
   Authors_0.books_ID
-FROM bookshop_Authors AS Authors_0; 
-[sqlite] - COMMIT 
+FROM bookshop_Authors AS Authors_0;
+[sqlite] - COMMIT
  > init from db/data/bookshop-Authors.csv
-[sqlite] - BEGIN 
+[sqlite] - BEGIN
 [sqlite] - INSERT INTO bookshop_Authors ( ID, name ) VALUES ( ?, ? ) [
   [ '101', 'Emily Brontë' ],
   [ '107', 'Charlotte Brontë' ],
@@ -1124,7 +1124,7 @@ This is pretty much what we'd expect, i.e. the constraint in action. We don't ha
 
 Branch: `11-fix-the-to-many-managed-association`.
 
-The to-many managed association won't work for what we want, we can't relate an author to more than one book. The association is only half-baked at this point anyway, as we can see from the warnings that are emitted, and the error that occurs when we try to use it. 
+The to-many managed association won't work for what we want, we can't relate an author to more than one book. The association is only half-baked at this point anyway, as we can see from the warnings that are emitted, and the error that occurs when we try to use it.
 
 Let's address that now, by adding the `on` condition mentioned in both the warning and in the error.
 
@@ -1157,7 +1157,7 @@ EDMX: The warnings have now gone. There are no further changes to the details of
 </EntityContainer>
 ```
 
-However, both the `Books` and `Authors` `EntityType`s have changed. 
+However, both the `Books` and `Authors` `EntityType`s have changed.
 
 The `Books` `EntityType`, i.e. the target of this (one-) to-many managed association, now has a new attribute `Partner="books"` in its existing `NavigationProperty`:
 
@@ -1194,7 +1194,7 @@ But more crucially, this property:
 <Property Name="books_ID" Type="Edm.Int32"/>
 ```
 
-has now disappeared again. This makes sense, in that it absolutely didn't make sense to have a `book_ID` property to link an author to potentially multiple books. 
+has now disappeared again. This makes sense, in that it absolutely didn't make sense to have a `book_ID` property to link an author to potentially multiple books.
 
 SQL: Correspondingly, the `book_ID` element has now disappeared again from both the authors table and view DDL statements:
 
@@ -1344,7 +1344,7 @@ This reflects exactly the fields and data within the `db/data/bookshop-Authors.c
 }
 ```
 
-Great! 
+Great!
 
 Of course, this is a fully functional navigation property so we can use more involved OData query operations.
 
@@ -1495,7 +1495,7 @@ Right now, the relationships defined in `srv/extend.cds`, going from `bookshop.B
   }
   ```
 
-Now we need to make a change so that they no longer point to each other, but instead point to the corresponding elements in the new link entity `Books_Authors`. 
+Now we need to make a change so that they no longer point to each other, but instead point to the corresponding elements in the new link entity `Books_Authors`.
 
 👉 Modify the `srv/extend.cds` so the entire contents look like this (note that each of the element names are plural now):
 
@@ -1529,7 +1529,7 @@ EDMX: A warning is emitted thus:
 [WARNING] srv/main.cds:5:10: No OData navigation property generated, target “Books_Authors” is outside of service “Z” (in entity:“Z.Authors”/element:“books”)
 ```
 
-The message is fairly clear, although it's best to read this one from back to front to properly understand it. 
+The message is fairly clear, although it's best to read this one from back to front to properly understand it.
 
 What it's saying is that because `Books_Authors` is not included in the `Z` service definition (which is true, we haven't added anything inside the `service Z { ... }` to include it yet) a navigation property binding at the OData level cannot be generated. This is because there isn't anywhere for it to point - there is no target entity type for this link entity, and consequently no entityset either as a target for the navigation.
 
@@ -1610,11 +1610,11 @@ SERVER: We see an error emitted:
 [cds] - connect to db > sqlite { database: ':memory:' }
  > init from db/data/bookshop-Authors.csv
  > init from db/data/bookshop-Books.csv
-[ERROR] SQLITE_ERROR: table bookshop_Books has no column named author_ID in: 
+[ERROR] SQLITE_ERROR: table bookshop_Books has no column named author_ID in:
 INSERT INTO bookshop_Books ( ID, title, author_ID ) VALUES ( ?, ?, ? )
 ```
 
-This makes sense, as there is no longer any `author_ID`. So before moving on to the next step, let's get rid of that from the CSV file `db/data/bookshop-Books.csv`. 
+This makes sense, as there is no longer any `author_ID`. So before moving on to the next step, let's get rid of that from the CSV file `db/data/bookshop-Books.csv`.
 
 And that's not wasted effort that we'll have to shortly undo, because when we do want to rebuild that relationship (between books and authors), we won't be doing it in the `db/data/bookshop-Books.csv` file, we'll be doing it in a new CSV file that will correspond to the link entity.
 
@@ -1672,13 +1672,13 @@ service Z {
 }
 ```
 
-But with our `srv/extend.cds` file, we're already thinking philosophically about treading lightly upon entity and service definitions that already exist, and instead extending and modifying them from elsewhere. 
+But with our `srv/extend.cds` file, we're already thinking philosophically about treading lightly upon entity and service definitions that already exist, and instead extending and modifying them from elsewhere.
 
 In this file, we've already used the `extend` keyword to add elements to existing entities (adding `authors` to `bookshop.Books`, and `books` to `bookshop.Authors`). So let's continue on that path and add a further `extend` keyword, but this time not for an entity, but for a service. Our `Z` service.
 
 In order to successfully reference that `Z` service, which is defined in `srv/main.cds`, we need to bring the definition in.
 
-👉 So, in `srv/extend.cds`: 
+👉 So, in `srv/extend.cds`:
 
 * add a `using` line to bring in the definitions in `srv/main.cds`
 * add an `extend service` clause to add the link entity to the `Z` service
@@ -1896,7 +1896,7 @@ Not only that, but now that the relationships are back in the EDMX, we can follo
   }
   ```
 
-There's no data in these followed navigation properties, because we removed the only link between the two entities when we removed the `author_ID` field from the data in the previous step. 
+There's no data in these followed navigation properties, because we removed the only link between the two entities when we removed the `author_ID` field from the data in the previous step.
 
 But notice, before we continue, that the value of the navigation property `authors` is an array. Not a scalar, like it was when we had `author_ID`, i.e. before we went from just a one-to-many relationship between authors and books to where we are now, where we have a many-to-many relationship. And it's a similar situation for the `books` navigation property in the records of the `Authors` entityset too.
 
@@ -1913,11 +1913,11 @@ CREATE TABLE Books_Authors (
 );
 ```
 
-So we can now relate books and authors by defining pairs of IDs in a new CSV file `db/data/Books_Authors.csv`. The name follows the usual convention, even though it looks a little different to the names of the other CSV files here; it is the namespace and entity name, but as there's no namespace that contextualises the entity here, there's no `<namespace>-` prefix part in the filename. 
+So we can now relate books and authors by defining pairs of IDs in a new CSV file `db/data/Books_Authors.csv`. The name follows the usual convention, even though it looks a little different to the names of the other CSV files here; it is the namespace and entity name, but as there's no namespace that contextualises the entity here, there's no `<namespace>-` prefix part in the filename.
 
 > Remember that the entity (`entity Books_Authors { ... }`) is defined in the `srv/extend.cds` file where there's no `namespace` declaration.
 
-Let's start by restoring the relationships we had before, where: 
+Let's start by restoring the relationships we had before, where:
 
 * Charlotte Brontë wrote Wuthering Heights
 * Emily Brontë wrote Jane Eyre
@@ -2085,7 +2085,7 @@ We can use the power of OData V4 to make the second jump so that we effectively 
 
 Branch: `17-add-a-further-author-and-book-relationship-to-define-co-authorship`.
 
-As a final test, let's create a fictional collaboration between Ellis Bell and Emily Brontë. Ellis Bell was the pseudonym under which Emily Brontë wrote Wuthering Heights, so it sort of makes sense. Or maybe it doesn't. Anyway. 
+As a final test, let's create a fictional collaboration between Ellis Bell and Emily Brontë. Ellis Bell was the pseudonym under which Emily Brontë wrote Wuthering Heights, so it sort of makes sense. Or maybe it doesn't. Anyway.
 
 👉 Add a new record to the end of `db/data/bookshop-Authors.csv` to represent Ellis Bell, so it looks like this:
 
@@ -2160,6 +2160,6 @@ book_ID,author_ID
 }
 ```
 
-We now have a fully functioning many-to-many relationship set up between our books and our authors, built with a pair of (one-) to-many managed associations linked together with a link entity. 
+We now have a fully functioning many-to-many relationship set up between our books and our authors, built with a pair of (one-) to-many managed associations linked together with a link entity.
 
 Great work!
