@@ -1017,11 +1017,116 @@ SERVER: The `Authors` entityset records at <http://localhost:4004/z/Authors> now
 
 Basically, as it stands, this to-many managed association isn't quite right. Given that there's only a single scalar value that can be specified for `books_ID`, how on earth could we relate an author to more than one book?
 
+While we can logically see that this is not going to work, let's find out what happens if we try to actually use this new `NavigationProperty` that we have at the moment, i.e. this one:
+
+```xml
+<NavigationProperty Name="books" Type="Collection(Z.Books)"/>
+```
+
+We know that to follow such properties we can use the OData system query option `$expand`. 
+
+👉 So try this: <http://localhost:4004/z/Authors?$expand=books>.
+
+What we get is perhaps a little unexpected, but not an overall surprise:
+
+```xml
+<error xmlns="http://docs.oasis-open.org/odata/ns/metadata">
+  <code>500</code>
+  <message>SQLITE_ERROR: near ")": syntax error in: SELECT b.ID AS "b_ID", b.title AS "b_title", b.author_ID AS "b_author_ID", filterExpand.ID AS "filterExpand_ID" FROM Z_Books b INNER JOIN (SELECT DISTINCT ID FROM (SELECT a.ID AS ID FROM Z_Authors a ORDER BY a.ID COLLATE NOCASE ASC LIMIT 1000)) filterExpand ON ( )</message>
+</error>
+```
+
+It stands to reason that this SQL expression that was constructed here to go from authors to books needs something for the `ON (...)` part of the filter expansion (right at the end of the expression). Are you wondering what might go in there? How could we find out?
+
+Well, we could turn on debug output with the CAP server, via the [Minimalistic Logging Facade](https://cap.cloud.sap/docs/node.js/cds-log), specifically with the `DEBUG` environment variable, and then make a similar OData query operation but going the other way, where we know the relationship described by the `NavigationProperty` there is correct, i.e. includes a `ReferentialConstraint`:
+
+```xml
+<NavigationProperty Name="author" Type="Z.Authors">
+  <ReferentialConstraint Property="author_ID" ReferencedProperty="ID"/>
+</NavigationProperty>
+```
+
+👉 Stop the CAP server with Ctrl-C, and restart it, specifying the value `sql` for the [`DEBUG` environment variable](https://cap.cloud.sap/docs/node.js/cds-log#debug-env-variable) on the same line, like this:
+
+```shell
+DEBUG=sql cds watch
+```
+
+Immediately, in addition to all the normal log output, we also see this:
+
+```log
+[sqlite] - BEGIN 
+[sqlite] - DROP table if exists cds_Model; 
+[sqlite] - COMMIT 
+[sqlite] - BEGIN 
+[sqlite] - SELECT 1 from sqlite_master where name='cds_xt_Extensions' {}
+[sqlite] - DROP VIEW IF EXISTS Z_Authors 
+[sqlite] - DROP VIEW IF EXISTS Z_Books 
+[sqlite] - DROP TABLE IF EXISTS bookshop_Authors 
+[sqlite] - DROP TABLE IF EXISTS bookshop_Books 
+[sqlite] - CREATE TABLE bookshop_Books (
+  ID INTEGER NOT NULL,
+  title NVARCHAR(5000),
+  author_ID INTEGER,
+  PRIMARY KEY(ID)
+); 
+[sqlite] - CREATE TABLE bookshop_Authors (
+  ID INTEGER NOT NULL,
+  name NVARCHAR(5000),
+  books_ID INTEGER,
+  PRIMARY KEY(ID)
+); 
+[sqlite] - CREATE VIEW Z_Books AS SELECT
+  Books_0.ID,
+  Books_0.title,
+  Books_0.author_ID
+FROM bookshop_Books AS Books_0; 
+[sqlite] - CREATE VIEW Z_Authors AS SELECT
+  Authors_0.ID,
+  Authors_0.name,
+  Authors_0.books_ID
+FROM bookshop_Authors AS Authors_0; 
+[sqlite] - COMMIT 
+ > init from db/data/bookshop-Authors.csv
+[sqlite] - BEGIN 
+[sqlite] - INSERT INTO bookshop_Authors ( ID, name ) VALUES ( ?, ? ) [
+  [ '101', 'Emily Brontë' ],
+  [ '107', 'Charlotte Brontë' ],
+  [ '150', 'Edgar Allen Poe' ],
+  [ '170', 'Richard Carpenter' ]
+]
+ > init from db/data/bookshop-Books.csv
+[sqlite] - INSERT INTO bookshop_Books ( ID, title, author_ID ) VALUES ( ?, ?, ? ) [
+  [ '201', 'Wuthering Heights', '101' ],
+  [ '207', 'Jane Eyre', '107' ],
+  [ '251', 'The Raven', '150' ],
+  [ '252', 'Eleonora', '150' ],
+  [ '271', 'Catweazle', '170' ]
+]
+[sqlite] - COMMIT
+```
+
+👉 Now request the resource at <http://localhost:4004/z/Books?$expand=author>, and observe the log output, which should show something like this:
+
+```log
+[sqlite] - SELECT a.ID AS "a_ID", a.title AS "a_title", a.author_ID AS "a_author_ID", b.ID AS "b_ID", b.name AS "b_name", b.books_ID AS "b_books_ID" FROM Z_Books a LEFT JOIN Z_Authors b ON ( b.ID = a.author_ID ) ORDER BY a.ID COLLATE NOCASE ASC LIMIT 1000 []
+```
+
+We can see from this successful call that follows the relationship from books to authors that the content of the `ON (...)` is:
+
+```sql
+b.ID = a.author_ID
+```
+
+This is pretty much what we'd expect, i.e. the constraint in action. We don't have a constraint in the `ON (...)` part of the SQL expression generated for <http://localhost:4004/z/Authors?$expand=books> because the managed association declaration is incomplete.
+
 ## 11 Fix the to-many managed association
 
 Branch: `11-fix-the-to-many-managed-association`.
 
-The to-many managed association won't work for what we want, we can't relate an author to more than one book. The association is only half-baked at this point anyway, as we can see from the warnings that are emitted. Let's address that now, by adding the `on` condition that the warnings mentioned.
+The to-many managed association won't work for what we want, we can't relate an author to more than one book. The association is only half-baked at this point anyway, as we can see from the warnings that are emitted, and the error that occurs when we try to use it. 
+
+Let's address that now, by adding the `on` condition mentioned in both the warning and in the error.
 
 👉 Modify the to-many association in the `srv/extend.cds` so it looks like this:
 
