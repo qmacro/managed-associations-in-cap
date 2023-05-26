@@ -855,7 +855,7 @@ Incidentally, if you didn't manage to save both files at the same time, that's f
 
 Branch: `10-add-a-reverse-to-many-managed-association-from-authors-to-books`.
 
-So far we can go from a book to the author of that book. So that we can also go from an author to the book(s) they wrote, we need to add a reverse association. Again, a managed association, but this time not a to-one but a a to-many managed association.
+So far we can go from a book to the author of that book. So that we can also go from an author to the book(s) they wrote, we need to add a reverse association. Again, a managed association, but this time not a to-one but a to-many managed association.
 
 👉 In the `srv/extend.cds` file, add another `extend` stanza so the entire contents look like this (do not specify any `on` condition at this point):
 
