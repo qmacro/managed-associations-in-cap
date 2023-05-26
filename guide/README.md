@@ -1511,9 +1511,11 @@ Right now, the relationships defined in `srv/extend.cds`, going from `bookshop.B
   }
   ```
 
+This current setup affords us a relationship between books and authors such that a book can point to only one author, but an author can point to more than one book.
+
 Now we need to make a change so that they no longer point to each other, but instead point to the corresponding elements in the new link entity `Books_Authors`.
 
-👉 Modify the `srv/extend.cds` so the entire contents look like this (note that each of the element names are plural now):
+👉 Modify the `srv/extend.cds` so the entire contents look like this:
 
 ```cds
 using bookshop from '../db/schema';
@@ -1531,6 +1533,8 @@ entity Books_Authors {
   author: Association to bookshop.Authors;
 }
 ```
+
+Observe that each one of the element names is plural, matching the "many" keyword in each managed association. Changing to this setup affords us a different relationship between books and authors. Now, a book can point to more than one author, as well as an author being able to point to more than one book.
 
 > It's at this point worth mentioning the way I remember how the `on` conditions are specified, as the examples here are clean and clear to use in an explanation. In the first example here (`authors: Association to many Books_Authors on authors.book = $self`) the left hand side of the condition, `authors.book` is constructed from the name of the element we're defining (`authors`), and the name of the element in the target entity that describes the reverse relationship (i.e. `book`), making `authors.book`. Similarly for `books.author` in the second example.
 
