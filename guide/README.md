@@ -1027,12 +1027,16 @@ We know that to follow such properties we can use the OData system query option 
 
 👉 So try this: <http://localhost:4004/z/Authors?$expand=books>.
 
-What we get is perhaps a little unexpected, but not an overall surprise:
+What we get is perhaps a little unexpected, but not an overall surprise (some whitespace has been added for better readability here):
 
 ```xml
 <error xmlns="http://docs.oasis-open.org/odata/ns/metadata">
   <code>500</code>
-  <message>SQLITE_ERROR: near ")": syntax error in: SELECT b.ID AS "b_ID", b.title AS "b_title", b.author_ID AS "b_author_ID", filterExpand.ID AS "filterExpand_ID" FROM Z_Books b INNER JOIN (SELECT DISTINCT ID FROM (SELECT a.ID AS ID FROM Z_Authors a ORDER BY a.ID COLLATE NOCASE ASC LIMIT 1000)) filterExpand ON ( )</message>
+  <message>SQLITE_ERROR: near ")": syntax error in: SELECT b.ID AS "b_ID", b.title 
+  AS "b_title", b.author_ID AS "b_author_ID", filterExpand.ID AS "filterExpand_ID"
+  FROM Z_Books b INNER JOIN (SELECT DISTINCT ID FROM (SELECT a.ID AS ID FROM
+  Z_Authors a ORDER BY a.ID COLLATE NOCASE ASC LIMIT 1000)) filterExpand ON ( )
+  </message>
 </error>
 ```
 
@@ -1106,10 +1110,14 @@ FROM bookshop_Authors AS Authors_0;
 [sqlite] - COMMIT
 ```
 
-👉 Now request the resource at <http://localhost:4004/z/Books?$expand=author>, and observe the log output, which should show something like this:
+👉 Now request the resource at <http://localhost:4004/z/Books?$expand=author>, and observe the log output, which should show something like this (again, whitespace has been added here):
 
 ```log
-[sqlite] - SELECT a.ID AS "a_ID", a.title AS "a_title", a.author_ID AS "a_author_ID", b.ID AS "b_ID", b.name AS "b_name", b.books_ID AS "b_books_ID" FROM Z_Books a LEFT JOIN Z_Authors b ON ( b.ID = a.author_ID ) ORDER BY a.ID COLLATE NOCASE ASC LIMIT 1000 []
+[sqlite] - SELECT a.ID AS "a_ID", a.title AS "a_title", a.author_ID 
+AS "a_author_ID", b.ID AS "b_ID", b.name AS "b_name", b.books_ID 
+AS "b_books_ID" FROM Z_Books a LEFT JOIN Z_Authors b 
+ON ( b.ID = a.author_ID ) 
+ORDER BY a.ID COLLATE NOCASE ASC LIMIT 1000 []
 ```
 
 We can see from this successful call that follows the relationship from books to authors that the content of the `ON (...)` is:
