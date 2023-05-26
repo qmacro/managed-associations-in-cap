@@ -1126,6 +1126,8 @@ We can see from this successful call that follows the relationship from books to
 b.ID = a.author_ID
 ```
 
+> The `a` and `b` don't refer to "authors" and "books" here; in fact, it's the reverse. It's just coincidence that our two entities begin with the first two letters of the alphabet. Observe how these letters are used as short codes for the tables in the SQL expression, starting with `a` and incrementing: `... FROM Z_Books as a LEFT JOIN Z_Authors b ...`.
+
 This is pretty much what we'd expect, i.e. the constraint in action. We don't have a constraint in the `ON (...)` part of the SQL expression generated for <http://localhost:4004/z/Authors?$expand=books> because the managed association declaration is incomplete.
 
 👉 Before continuing, restart the CAP server again, this time without the `DEBUG=sql`, i.e. back to normal:
