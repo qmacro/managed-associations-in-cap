@@ -1032,7 +1032,7 @@ What we get is perhaps a little unexpected, but not an overall surprise (some wh
 ```xml
 <error xmlns="http://docs.oasis-open.org/odata/ns/metadata">
   <code>500</code>
-  <message>SQLITE_ERROR: near ")": syntax error in: SELECT b.ID AS "b_ID", b.title 
+  <message>SQLITE_ERROR: near ")": syntax error in: SELECT b.ID AS "b_ID", b.title
   AS "b_title", b.author_ID AS "b_author_ID", filterExpand.ID AS "filterExpand_ID"
   FROM Z_Books b INNER JOIN (SELECT DISTINCT ID FROM (SELECT a.ID AS ID FROM
   Z_Authors a ORDER BY a.ID COLLATE NOCASE ASC LIMIT 1000)) filterExpand ON ( )
@@ -1113,10 +1113,10 @@ FROM bookshop_Authors AS Authors_0;
 👉 Now request the resource at <http://localhost:4004/z/Books?$expand=author>, and observe the log output, which should show something like this (again, whitespace has been added here):
 
 ```log
-[sqlite] - SELECT a.ID AS "a_ID", a.title AS "a_title", a.author_ID 
-AS "a_author_ID", b.ID AS "b_ID", b.name AS "b_name", b.books_ID 
-AS "b_books_ID" FROM Z_Books a LEFT JOIN Z_Authors b 
-ON ( b.ID = a.author_ID ) 
+[sqlite] - SELECT a.ID AS "a_ID", a.title AS "a_title", a.author_ID
+AS "a_author_ID", b.ID AS "b_ID", b.name AS "b_name", b.books_ID
+AS "b_books_ID" FROM Z_Books a LEFT JOIN Z_Authors b
+ON ( b.ID = a.author_ID )
 ORDER BY a.ID COLLATE NOCASE ASC LIMIT 1000 []
 ```
 
@@ -1916,9 +1916,36 @@ Not only that, but now that the relationships are back in the EDMX, we can follo
   }
   ```
 
-There's no data in these followed navigation properties, because we removed the only link between the two entities when we removed the `author_ID` field from the data in the previous step.
+There's no data in these followed navigation properties. That's because they both now point to the link entity. For example, here's the `EntityType` for `Authors`, where we can see that the `books` navigation property that we want to follow, via the `$expand` system query option, points to something of type `Z.LinkEntity`.
 
-But notice, before we continue, that the value of the navigation property `authors` is an array. Not a scalar, like it was when we had `author_ID`, i.e. before we went from just a one-to-many relationship between authors and books to where we are now, where we have a many-to-many relationship. And it's a similar situation for the `books` navigation property in the records of the `Authors` entityset too.
+```xml
+<EntityType Name="Authors">
+  <Key>
+    <PropertyRef Name="ID"/>
+  </Key>
+  <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
+  <Property Name="name" Type="Edm.String"/>
+  <NavigationProperty Name="books" Type="Collection(Z.LinkEntity)" Partner="author"/>
+</EntityType>
+```
+
+One other thing, before we continue. Did you notice that the "lack of data" here was expressed in terms of empty arrays? Let's focus on one specific author, and ask for the expansion of the books navigation property, with <http://localhost:4004/z/Authors/101?$expand=books>, to zoom in on this phenomenon. What we get in response is a single entity resource (i.e. we have carried out an OData READ operation this time, rather than a QUERY), again in a JSON representation that looks like this:
+
+```json
+{
+  "@odata.context": "$metadata#Authors(books())/$entity",
+  "ID": 101,
+  "name": "Emily Brontë",
+  "books": []
+}
+```
+
+The value of the `books` navigation property is `[]`. This is a direct reflection on the combination of two things:
+
+* the fact that the type of this navigation property is a collection: `Collection(Z.LinkEntity)`
+* we have no CSV data to provide initial data for the link entity yet
+
+Let's address that next.
 
 ## 16 Add data to the link entity to relate books and authors
 
