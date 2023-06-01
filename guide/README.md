@@ -2052,7 +2052,9 @@ We can now traverse one level of relationships, to find the books that authors w
 }
 ```
 
-Note that there is no author name information shown, we just get author ID information. That's because the author name is one step further on. Right now, we can see this query and result as like jumping half way across a stream to a stepping stone in the middle, which represents the link entity. To get to the other side, we need to take a second jump.
+Note that there is no author name information shown, we just get author ID information. That's because the author name is one step further on in the relationship chain.
+
+Right now, we can see this query and result as like jumping half way across a stream to a stepping stone in the middle, which represents the link entity. To get to the other side, we need to take a second jump.
 
 We can use the power of OData V4 to make the second jump so that we effectively cover both steps in one go, from `Authors` to `Books_Authors` to `Books`, like this: [http://localhost:4004/z/Authors?$expand=books($expand=book)](http://localhost:4004/z/Authors?$expand=books($expand=book)), which will emit:
 
@@ -2132,7 +2134,7 @@ We can use the power of OData V4 to make the second jump so that we effectively 
 
 Branch: `17-add-a-further-author-and-book-relationship-to-define-co-authorship`.
 
-As a final test, let's create a fictional collaboration between Ellis Bell and Emily Brontë. Ellis Bell was the pseudonym under which Emily Brontë wrote Wuthering Heights, so it sort of makes sense. Or maybe it doesn't. Anyway.
+As a final test, let's create a fictional collaboration between [Ellis Bell and Emily Brontë](https://en.wikipedia.org/wiki/Emily_Bront%C3%AB). Ellis Bell was the pen name under which Emily Brontë wrote Wuthering Heights, so it sort of makes sense. Or maybe it doesn't. Anyway.
 
 👉 Add a new record to the end of `db/data/bookshop-Authors.csv` to represent Ellis Bell, so it looks like this:
 
@@ -2207,6 +2209,55 @@ book_ID,author_ID
 }
 ```
 
-We now have a fully functioning many-to-many relationship set up between our books and our authors, built with a pair of (one-) to-many managed associations linked together with a link entity.
+👉 As one last test, what about building upon the search for Emily and Ellis, to display the book or books each wrote, in the result? Let's try it: [http://localhost:4004/z/Authors?$search=Ellis OR Emily&$expand=books($expand=book)](http://localhost:4004/z/Authors?$search=Ellis%20OR%20Emily&$expand=books($expand=book)). This delivers what we want:
 
-Great work!
+```json
+{
+  "@odata.context": "$metadata#Authors(books(book()))",
+  "value": [
+    {
+      "ID": 101,
+      "name": "Emily Brontë",
+      "books": [
+        {
+          "book_ID": 201,
+          "author_ID": 101,
+          "book": {
+            "ID": 201,
+            "title": "Wuthering Heights"
+          }
+        }
+      ]
+    },
+    {
+      "ID": 102,
+      "name": "Ellis Bell",
+      "books": [
+        {
+          "book_ID": 201,
+          "author_ID": 102,
+          "book": {
+            "ID": 201,
+            "title": "Wuthering Heights"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+One question for you to ponder here. Given the URL for this resource, which is:
+
+```url
+http://localhost:4004/z/Authors?$search=Ellis%20OR%20Emily&$expand=books($expand=book)
+```
+
+... how exactly does the `$expand=books($expand=book)` part work? What is the difference between `books` and `book` here? Can you follow the navigation properties through?
+
+
+## Wrapping up
+
+We now have a fully functioning many-to-many relationship set up between our books and our authors, built with a pair of (one-) to-many managed associations linked together with a link entity. It was a long journey, but hopefully a worthwhile one.
+
+If you made it to here, great work and congratulations!
