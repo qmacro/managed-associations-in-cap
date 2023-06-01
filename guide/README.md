@@ -2250,11 +2250,10 @@ book_ID,author_ID
 One question for you to ponder here. Given the URL for this resource, which is:
 
 ```url
-http://localhost:4004/z/Authors?$search=Ellis%20OR%20Emily&$expand=books($expand=book)
+http://localhost:4004/z/Authors?$search=Ellis OR Emily&$expand=books($expand=book)
 ```
 
 ... how exactly does the `$expand=books($expand=book)` part work? What is the difference between `books` and `book` here? Can you follow the navigation properties through?
-
 
 ## Wrapping up
 
