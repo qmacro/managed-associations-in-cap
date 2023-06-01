@@ -1969,7 +1969,7 @@ Let's start by restoring the relationships we had before, where:
 * Charlotte Brontë wrote Wuthering Heights
 * Emily Brontë wrote Jane Eyre
 * Richard Carpenter wrote Catweazle
-* Edgar Allen Poe wrote Eleonora and also wrote The Raven (a poem, as it happens)
+* Edgar Allen Poe wrote Eleonora and also wrote The Raven ([a poem](https://www.poetryfoundation.org/poems/48860/the-raven), as it happens)
 
 👉 Create the new file `db/data/Books_Authors.csv` and add the following to it:
 
